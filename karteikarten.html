@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0a0a1a"/>
+  <title>MedTools – Karteikarten</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    :root {
+      --bg:#0a0a1a; --surface:#12122a; --surface2:#1a1a3a;
+      --border:#2a2a4e; --text:#e8e8f4; --muted:#7878a0;
+      --red:#e94560;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text);
+           min-height:100vh; overflow-x:hidden; }
+
+    .header {
+      background:linear-gradient(180deg,#0f0f28 0%,var(--bg) 100%);
+      padding:calc(var(--safe-top) + 14px) 20px 14px;
+      text-align:center;
+      border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:100;
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    }
+    .back { display:inline-flex; align-items:center; gap:5px; font-size:13px;
+            color:var(--muted); text-decoration:none; margin-bottom:8px; float:left; }
+    .back:active { opacity:0.6; }
+    .header-inner { clear:both; }
+    .badge { display:inline-block; font-size:10px; letter-spacing:3px; text-transform:uppercase;
+             color:var(--red); background:#e9456015; border:1px solid #e9456030;
+             border-radius:20px; padding:3px 10px; margin-bottom:6px; }
+    .header h1 { font-family:'DM Serif Display',serif; font-size:18px;
+                 font-weight:normal; color:var(--text); }
+    .header p { font-size:11px; color:var(--muted); margin-top:2px; }
+
+    .scroll { padding:16px 14px calc(var(--safe-bot) + 24px);
+              max-width:500px; margin:0 auto; }
+
+    /* Filter */
+    .filters { display:flex; gap:6px; flex-wrap:wrap;
+               justify-content:center; margin-bottom:16px; }
+    .filter-btn { padding:4px 10px; border-radius:20px; border:1px solid var(--border);
+                  background:transparent; color:var(--muted); font-size:11px;
+                  cursor:pointer; font-family:'DM Sans',sans-serif;
+                  transition:all 0.15s; }
+    .filter-btn.active { border-color:var(--red); background:var(--red); color:#fff; }
+
+    /* Fortschritt */
+    .progress-row { display:flex; justify-content:space-between;
+                    font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .progress-bar { background:var(--surface2); border-radius:4px; height:4px; margin-bottom:16px; }
+    .progress-fill { background:linear-gradient(90deg,var(--red),#533483);
+                     height:100%; border-radius:4px; transition:width 0.3s; }
+
+    /* Karte */
+    .card-wrap { perspective:1200px; min-height:300px; position:relative; margin-bottom:16px; }
+    .card-inner { position:relative; width:100%; min-height:300px;
+                  transform-style:preserve-3d; transition:transform 0.4s cubic-bezier(.4,0,.2,1); }
+    .card-inner.flipped { transform:rotateY(180deg); }
+    .card-face { position:absolute; width:100%; min-height:300px;
+                 backface-visibility:hidden; border-radius:20px;
+                 padding:24px 22px; }
+    .card-front { background:linear-gradient(135deg,#1a1a2e,#0f0f2a);
+                  border:1px solid #e9456025; }
+    .card-back  { background:linear-gradient(135deg,#0f0f2a,#1a1a2e);
+                  border:1px solid #e9456040;
+                  transform:rotateY(180deg); }
+    .kat-pill { display:inline-block; padding:2px 10px; border-radius:4px;
+                background:#e9456018; border:1px solid #e9456035;
+                font-size:10px; letter-spacing:2px; text-transform:uppercase;
+                color:var(--red); margin-bottom:18px; }
+    .face-label { font-size:10px; letter-spacing:2.5px; text-transform:uppercase;
+                  color:var(--muted); margin-bottom:12px; }
+    .question { font-family:'DM Serif Display',serif; font-size:17px;
+                font-style:italic; line-height:1.65; color:var(--text); }
+    .answer { font-size:13px; line-height:1.85; color:#c8c8e8;
+              white-space:pre-line; }
+    .flip-btn { margin-top:20px; width:100%; padding:12px;
+                border-radius:12px; border:none;
+                background:linear-gradient(135deg,var(--red),#c03050);
+                color:#fff; font-family:'DM Sans',sans-serif;
+                font-size:14px; font-weight:600; cursor:pointer;
+                box-shadow:0 6px 20px #e9456030; }
+    .flip-btn:active { transform:scale(0.98); }
+
+    /* Navigation */
+    .nav-row { display:flex; justify-content:space-between;
+               align-items:center; gap:8px; margin-bottom:16px; }
+    .nav-btn { padding:10px 18px; border-radius:10px; border:1px solid var(--border);
+               background:transparent; color:var(--muted); font-size:13px;
+               cursor:pointer; font-family:'DM Sans',sans-serif; }
+    .nav-btn:active { background:var(--surface); }
+    .known-btn { padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+                 background:transparent; color:var(--muted); font-size:12px;
+                 cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
+    .known-btn.known { border-color:#4caf9e; color:#4caf9e; background:#4caf9e12; }
+
+    /* Mini-Übersicht */
+    .mini-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+    .mini-btn { padding:7px 4px; border-radius:6px; border:none; cursor:pointer;
+                font-size:11px; font-family:'DM Sans',sans-serif;
+                background:var(--surface2); color:var(--muted); transition:all 0.12s; }
+    .mini-btn.active { background:var(--red); color:#fff; }
+    .mini-btn.known  { background:#4caf9e20; color:#4caf9e; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← MedTools</a>
+  <div class="header-inner">
+    <div class="badge">ESC / EAS 2025</div>
+    <h1>Karteikarten</h1>
+    <p>Dyslipidämie · Focused Update</p>
+  </div>
+</div>
+
+<div class="scroll">
+  <!-- Filter -->
+  <div class="filters" id="filters"></div>
+
+  <!-- Fortschritt -->
+  <div class="progress-row">
+    <span id="prog-text">1 / 15</span>
+    <span id="prog-known" style="color:#4caf9e">0 bekannt ✓</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="prog-fill" style="width:7%"></div>
+  </div>
+
+  <!-- Karte -->
+  <div class="card-wrap">
+    <div class="card-inner" id="card-inner">
+      <div class="card-face card-front" id="card-front">
+        <div class="kat-pill" id="front-kat"></div>
+        <div class="face-label">Frage</div>
+        <div class="question" id="front-q"></div>
+        <button class="flip-btn" onclick="flipCard()">Antwort aufdecken</button>
+      </div>
+      <div class="card-face card-back" id="card-back">
+        <div class="face-label">Antwort</div>
+        <div class="answer" id="back-a"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-row">
+    <button class="nav-btn" onclick="go(-1)">← Zurück</button>
+    <button class="known-btn" id="known-btn" onclick="toggleKnown()">Als bekannt</button>
+    <button class="nav-btn" onclick="go(1)">Weiter →</button>
+  </div>
+
+  <!-- Mini-Übersicht -->
+  <div class="mini-grid" id="mini-grid"></div>
+</div>
+
+<script>
+const CARDS = [
+  { id:1, kat:"Grundlagen", frage:"Was ist die Hauptursache von Atherosklerose laut ESC/EAS 2025?", antwort:"Die progressive Ablagerung von LDL-C und anderen ApoB-haltigen Lipoproteinen in der Arterienwand, die eine Kaskade entzündlicher Reaktionen auslöst und zur Plaquebildung führt. LDL-C ist nicht nur ein Risikofaktor, sondern eine direkte Ursache der ASCVD." },
+  { id:2, kat:"Risikoabschätzung", frage:"Welche Risikoalgorithmen empfiehlt die ESC/EAS 2025 zur kardiovaskulären Risikoabschätzung – und für welche Altersgruppen?", antwort:"SCORE2: für scheinbar gesunde Personen unter 70 Jahren (Klasse I, Level B).\nSCORE2-OP: für scheinbar gesunde Personen ab 70 Jahren (Klasse I, Level B).\nBeide schätzen das 10-Jahres-Risiko für fatale UND nicht-fatale kardiovaskuläre Ereignisse und ersetzen den alten SCORE-Algorithmus." },
+  { id:3, kat:"Risikoabschätzung", frage:"Welche 4 Risikokategorien werden definiert und welche SCORE2/SCORE2-OP-Schwellenwerte gelten?", antwort:"• Sehr hohes Risiko: SCORE2 ≥20% ODER dokumentierte ASCVD, DM mit Organschaden, schwere CKD (eGFR <30), FH + ASCVD\n• Hohes Risiko: SCORE2 ≥10% und <20% ODER LDL-C >4,9 mmol/L, TC >8 mmol/L, FH ohne andere Risikofaktoren\n• Moderates Risiko: SCORE2 ≥2% und <10%\n• Niedriges Risiko: SCORE2 <2%" },
+  { id:4, kat:"Risikoabschätzung", frage:"Was sind klinische Risikomodifikatoren, die über SCORE2/SCORE2-OP hinausgehen?", antwort:"Klinisch: Familiäre Vorgeschichte frühzeitiger CVD, Hochrisiko-Ethnizität, Adipositas, Bewegungsmangel, chron. Autoimmunerkrankungen, psychiatrische Erkrankungen, vorzeitige Menopause, Präeklampsie, HIV-Infektion, Schlafapnoe.\n\nBiomarker: hs-CRP >2 mg/L, Lp(a) >50 mg/dL (>105 nmol/L).\n\nSubklinische Atherosklerose (Bildgebung, erhöhter CAC-Score) → Klasse IIa, Level B." },
+  { id:5, kat:"LDL-C-Zielwerte", frage:"Welche LDL-C-Zielwerte gelten für die verschiedenen Risikokategorien?", antwort:"• Sehr hohes Risiko (Sekundärprävention): <55 mg/dL UND ≥50% Reduktion (Klasse I)\n• Extremes Risiko: <40 mg/dL (Klasse IIb)\n• Hohes Risiko: <70 mg/dL UND ≥50% Reduktion (Klasse I)\n• Moderates Risiko: <100 mg/dL (Klasse IIa)\n• Niedriges Risiko: <116 mg/dL (Klasse IIb)" },
+  { id:6, kat:"Pharmakotherapie", frage:"Welche neuen Wirkstoffe werden in der ESC/EAS 2025 für die LDL-C-Senkung empfohlen?", antwort:"1. Bempedoinsäure (oral, ACL-Hemmer):\n   – Monotherapie: ca. 23% LDL-C-Senkung\n   – + Statin: ca. 18% | + Ezetimib: ca. 38%\n   – Klasse I bei Statinintoleranz; Klasse IIa als Zusatz\n   – Vorsicht bei Gichtvorgeschichte\n\n2. Evinacumab (Anti-ANGPTL3 mAb):\n   – Nur für homozygote FH (≥5 Jahre), ca. 50% Senkung\n   – Klasse IIa, Level B" },
+  { id:7, kat:"Pharmakotherapie", frage:"Welche durchschnittlichen LDL-C-Reduktionen erzielen die Therapiekombinationen?", antwort:"• Moderat-intensives Statin: ~30%\n• Hoch-intensives Statin: ~50%\n• + Ezetimib: ~60% | + Bempedoinsäure: ~58%\n• + Ezetimib + Bempedoinsäure: ~68%\n• PCSK9-mAb allein: ~60%\n• Hoch-int. Statin + PCSK9-mAb: ~75%\n• Hoch-int. Statin + EZE + PCSK9-mAb: ~80%\n• Alle vier kombiniert: ~86%" },
+  { id:8, kat:"Akutes Koronarsyndrom", frage:"Was empfiehlt die ESC/EAS 2025 zur Lipidsenkung bei ACS-Hospitalisierung?", antwort:"Zwei neue Empfehlungen:\n\n1. Intensivierung bei vorbestehender Lipidtherapie → Klasse I, Level C\n\n2. Kombination Hochintensives Statin + Ezetimib beim therapienaiven ACS-Patienten, wenn LDL-Ziel mit Statin allein nicht erreichbar → Klasse IIa, Level B\n\nPrinzip: 'the sooner, the lower, the better'" },
+  { id:9, kat:"Lipoprotein(a)", frage:"Was sagt die ESC/EAS 2025 zu Lp(a) als kardiovaskulärem Risikofaktor?", antwort:"• Lp(a) >50 mg/dL (>105 nmol/L): gilt als CV-Risikoverstärker → Klasse IIa, Level B\n• Kontinuierliche Risikoassoziation; leichter Anstieg ab >30 mg/dL\n• Mindestens einmalige Messung im Leben empfohlen\n• >90% genetisch determiniert\n• RNA-Therapien (80–98% Senkung) in klinischen Studien\n• Statine haben keinen relevanten Effekt auf Lp(a)" },
+  { id:10, kat:"Hypertriglyceridämie", frage:"Welche medikamentösen Therapien empfiehlt die ESC/EAS 2025 bei Hypertriglyceridämie?", antwort:"1. Hochdosiertes Icosapent-Ethyl (2×2 g/Tag) + Statin\n   – TG 135–499 mg/dL, Hoch-/Sehr-Hoch-Risiko\n   – Klasse IIa, Level B (REDUCE-IT)\n   – NICHT EPA+DHA-Mischpräparate (STRENGTH negativ!)\n\n2. Volanesorsen (300 mg/Woche)\n   – Nur bei FCS (familiäres Chylomikronämie-Syndrom)\n   – TG >750 mg/dL, Pankreatitisprophylaxe\n   – Klasse IIa, Level B" },
+  { id:11, kat:"Spezielle Gruppen", frage:"Was empfiehlt die ESC/EAS 2025 zur Statintherapie bei HIV-Patienten?", antwort:"Neue Klasse-I-Empfehlung (Level B):\nStatintherapie für HIV-positive Personen ≥40 Jahre in der Primärprävention – unabhängig von CV-Risiko und LDL-C – zur Reduktion kardiovaskulärer Ereignisse.\n\nBasis: REPRIEVE-Studie (Pitavastatin 4 mg/Tag):\n• 35% Reduktion MACE (HR 0,65)\n• Wichtig: Interaktionen mit ART beachten!\n• HIV-Patienten haben 2-fach erhöhtes ASCVD-Risiko" },
+  { id:12, kat:"Spezielle Gruppen", frage:"Was empfiehlt die ESC/EAS 2025 zur Statintherapie bei Krebspatienten unter Anthrazyklin-Chemotherapie?", antwort:"Klasse IIa, Level B:\nStatine bei Erwachsenen mit hohem/sehr hohem Risiko für chemotherapiebedingte CV-Toxizität.\n\nBasis: STOP-CA-Studie (Atorvastatin 40 mg bei Lymphom):\n• LVEF-Abfall signifikant reduziert (22% vs. 9%)\n• Keine erhöhte Hepatotoxizität oder Myopathie\n\nRisikostratifizierung: gemäß ESC-Kardioonkologie-Leitlinien 2022" },
+  { id:13, kat:"Nahrungsergänzung", frage:"Was sagt die ESC/EAS 2025 zu Nahrungsergänzungsmitteln und Vitaminen?", antwort:"Neue Klasse-III-Empfehlung (Level B):\nNahrungsergänzungsmittel NICHT empfohlen zur Reduktion des ASCVD-Risikos.\n\n• Fischöl (EPA+DHA-Mischungen): kein Benefit (OMEMI, STRENGTH)\n• Roter Hefe-Reis: EU-Verbot ≥3 mg Monakoline/Tag seit 2022\n• Phytosterole: ~10% LDL-Senkung, kein CV-Benefit belegt\n• SPORT-Studie: Kein Supplement senkte LDL-C signifikant vs. Placebo" },
+  { id:14, kat:"Primärprävention", frage:"Wann ist pharmakologische LDL-C-Senkung in der Primärprävention empfohlen?", antwort:"Klasse I (Empfohlen):\n• Sehr hohes Risiko + LDL-C ≥70 mg/dL\n• Hohes Risiko + LDL-C ≥100 mg/dL\n→ trotz nicht-pharmakologischer Maßnahmen\n\nKlasse IIa (Sollte erwogen werden):\n• Sehr hohes Risiko + LDL-C 55–69 mg/dL\n• Hohes Risiko + LDL-C 70–99 mg/dL\n• Moderates Risiko + LDL-C 100–189 mg/dL\n• Niedriges Risiko + LDL-C 116–189 mg/dL\n\nBei LDL-C ≥190 mg/dL: immer mind. hohes Risiko!" },
+  { id:15, kat:"CAC-Score", frage:"Welche Rolle spielt der koronare Kalzium-Score (CAC) in der ESC/EAS 2025?", antwort:"Neue Klasse-IIa-Empfehlung (Level B):\nSubklinische Atherosklerose / erhöhter CAC-Score als Risikomodifikator bei moderatem Risiko oder an Therapieschwellen.\n\n• CAC >300: ähnliches Risiko wie klinische ASCVD\n• CAC = 0: niedrigeres Risiko, 15-Jahres-Sicherheit\n• Verbessert Diskriminierung beim SCORE2\n• Achtung: Statine erhöhen Kalzifizierung → unter Statintherapie mit Vorsicht interpretieren" }
+];
+
+const KAT_FARBEN = {
+  "Grundlagen":       { accent:"#e94560" },
+  "Risikoabschätzung":{ accent:"#4fc3f7" },
+  "LDL-C-Zielwerte":  { accent:"#f0a040" },
+  "Pharmakotherapie": { accent:"#9c6fde" },
+  "Akutes Koronarsyndrom": { accent:"#e94560" },
+  "Lipoprotein(a)":   { accent:"#4caf9e" },
+  "Hypertriglyceridämie": { accent:"#00bcd4" },
+  "Spezielle Gruppen":{ accent:"#9c6fde" },
+  "Nahrungsergänzung":{ accent:"#f0a040" },
+  "Primärprävention": { accent:"#e94560" },
+  "CAC-Score":        { accent:"#4fc3f7" }
+};
+
+let filter  = "Alle";
+let idx     = 0;
+let known   = new Set();
+let flipped = false;
+
+function filtered() {
+  return filter === "Alle" ? CARDS : CARDS.filter(c => c.kat === filter);
+}
+
+function render() {
+  const cards = filtered();
+  const card  = cards[idx] || cards[0];
+  if (!card) return;
+
+  const acc = (KAT_FARBEN[card.kat] || { accent:"#e94560" }).accent;
+
+  // Karte
+  document.getElementById('front-kat').textContent = card.kat;
+  document.getElementById('front-kat').style.color = acc;
+  document.getElementById('front-kat').style.background = acc + '18';
+  document.getElementById('front-kat').style.borderColor = acc + '35';
+  document.getElementById('front-q').textContent = card.frage;
+  document.getElementById('back-a').textContent  = card.antwort;
+
+  // Flip zurücksetzen
+  const inner = document.getElementById('card-inner');
+  inner.classList.remove('flipped');
+  flipped = false;
+
+  // Fortschritt
+  document.getElementById('prog-text').textContent  = `${idx+1} / ${cards.length}`;
+  document.getElementById('prog-known').textContent = `${known.size} bekannt ✓`;
+  document.getElementById('prog-fill').style.width  = `${((idx+1)/cards.length)*100}%`;
+
+  // Bekannt-Button
+  const kb = document.getElementById('known-btn');
+  kb.className = known.has(card.id) ? 'known-btn known' : 'known-btn';
+  kb.textContent = known.has(card.id) ? '✓ Bekannt' : 'Als bekannt';
+
+  // Mini-Grid
+  const mg = document.getElementById('mini-grid');
+  mg.innerHTML = '';
+  cards.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'mini-btn' + (i===idx?' active':'') + (known.has(c.id)&&i!==idx?' known':'');
+    b.textContent = c.id;
+    b.onclick = () => { idx = i; render(); };
+    mg.appendChild(b);
+  });
+}
+
+function flipCard() {
+  document.getElementById('card-inner').classList.toggle('flipped');
+  flipped = !flipped;
+}
+
+function go(dir) {
+  const cards = filtered();
+  idx = (idx + dir + cards.length) % cards.length;
+  render();
+}
+
+function toggleKnown() {
+  const card = filtered()[idx];
+  if (!card) return;
+  if (known.has(card.id)) known.delete(card.id);
+  else known.add(card.id);
+  render();
+}
+
+// Filter-Buttons
+function buildFilters() {
+  const cats = ["Alle", ...new Set(CARDS.map(c => c.kat))];
+  const wrap = document.getElementById('filters');
+  cats.forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'filter-btn' + (k === filter ? ' active' : '');
+    b.textContent = k;
+    b.onclick = () => {
+      filter = k; idx = 0;
+      document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      render();
+    };
+    wrap.appendChild(b);
+  });
+}
+
+buildFilters();
+render();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

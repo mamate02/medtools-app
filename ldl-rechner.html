@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="LDL-Rechner"/>
+  <meta name="theme-color" content="#0a0a1a"/>
+  <title>MedTools – LDL-Rechner</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <style>
+    :root {
+      --bg:        #0a0a1a;
+      --surface:   #12122a;
+      --surface2:  #1a1a3a;
+      --border:    #2a2a4e;
+      --red:       #e94560;
+      --orange:    #f0a040;
+      --blue:      #4fc3f7;
+      --green:     #4caf9e;
+      --purple:    #9c6fde;
+      --text:      #e8e8f4;
+      --muted:     #7878a0;
+      --safe-top:  env(safe-area-inset-top, 0px);
+      --safe-bot:  env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(180deg, #0f0f28 0%, var(--bg) 100%);
+      padding: calc(var(--safe-top) + 18px) 20px 18px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .header-badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--red);
+      background: #e9456015;
+      border: 1px solid #e9456030;
+      border-radius: 20px;
+      padding: 3px 10px;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      font-weight: normal;
+      color: var(--text);
+      letter-spacing: 0.3px;
+    }
+    .header p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Scroll container ── */
+    .scroll {
+      padding: 20px 16px calc(var(--safe-bot) + 100px);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* ── Section headers ── */
+    .section-title {
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 24px 0 12px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+
+    /* ── Number input row ── */
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .input-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    .input-group input[type=number] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 20px;
+      font-family: 'DM Serif Display', serif;
+      padding: 10px 14px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-group input[type=number]:focus {
+      border-color: var(--red);
+    }
+    .input-unit {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Score pill ── */
+    .score-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .score-label {
+      flex: 1;
+    }
+    .score-label strong {
+      display: block;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .score-label span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .score-badge {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--blue);
+      min-width: 52px;
+      text-align: right;
+    }
+
+    /* ── Slider ── */
+    .slider-wrap { margin: 4px 0 8px; }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 4px #e9456025;
+      cursor: pointer;
+    }
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      padding: 0 2px;
+    }
+
+    /* ── Checkbox items ── */
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-item .check-box {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      transition: all 0.15s;
+    }
+    .check-item.checked .check-box {
+      background: var(--red);
+      border-color: var(--red);
+    }
+    .check-item .check-text strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .check-item .check-text span {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Calculate button ── */
+    .calc-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, var(--red) 0%, #c03050 100%);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      margin-top: 24px;
+      box-shadow: 0 8px 30px #e9456035;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .calc-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 4px 16px #e9456025;
+    }
+
+    /* ── Result section ── */
+    #result { display: none; }
+    #result.visible { display: block; }
+
+    .result-risiko {
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-risiko::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.07;
+      background: radial-gradient(circle at 80% 20%, #fff 0%, transparent 60%);
+    }
+    .risiko-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+    .risiko-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    .risiko-grund {
+      font-size: 12px;
+      opacity: 0.8;
+      line-height: 1.5;
+    }
+    .risiko-score-info {
+      font-size: 11px;
+      opacity: 0.65;
+      margin-top: 8px;
+    }
+
+    .result-ldl {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .ldl-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .ldl-ziel-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .ldl-ziel-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 38px;
+      color: var(--red);
+    }
+    .ldl-ziel-unit {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .ldl-ziel-mg {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .ldl-status {
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .ldl-status.ok    { background: #4caf9e18; color: var(--green); border: 1px solid #4caf9e30; }
+    .ldl-status.warn  { background: #e9456018; color: var(--red);   border: 1px solid #e9456030; }
+
+    .ldl-reduktion {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .ldl-red-box {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .ldl-red-box strong {
+      display: block;
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      color: var(--orange);
+    }
+    .ldl-red-box span {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    .result-therapie {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .therapie-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .therapie-text {
+      font-size: 13px;
+      color: #c0c0e0;
+      line-height: 1.8;
+    }
+
+    .result-lpa {
+      background: #9c6fde12;
+      border: 1px solid #9c6fde30;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #c0a0f0;
+      line-height: 1.6;
+    }
+
+    .disclaimer {
+      font-size: 10px;
+      color: var(--border);
+      text-align: center;
+      line-height: 1.6;
+      padding: 16px 0;
+    }
+
+    /* ── Animations ── */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate { animation: slideUp 0.35s ease both; }
+    .d1 { animation-delay: 0.05s; }
+    .d2 { animation-delay: 0.12s; }
+    .d3 { animation-delay: 0.19s; }
+    .d4 { animation-delay: 0.26s; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#7878a0;text-decoration:none;margin-bottom:10px;">← MedTools</a>
+  <div class="header-badge">ESC / EAS 2025</div>
+  <h1>Risiko & LDL-Rechner</h1>
+  <p>Focused Update · Dyslipidämie-Leitlinien</p>
+</div>
+
+<div class="scroll">
+
+  <!-- ═══ BASISDATEN ═══ -->
+  <div class="section-title">Patientendaten</div>
+  <div class="card">
+    <div class="input-row">
+      <div class="input-group">
+        <label>Alter</label>
+        <input type="number" id="alter" value="55" min="18" max="100"/>
+        <div class="input-unit">Jahre</div>
+      </div>
+      <div class="input-group">
+        <label>LDL-C aktuell</label>
+        <input type="number" id="ldl" value="135" min="10" max="465" step="1"/>
+        <div class="input-unit">mg/dL</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCORE2 ═══ -->
+  <div class="section-title">SCORE2 / SCORE2-OP</div>
+  <div class="card">
+    <div class="score-pill">
+      <div class="score-label">
+        <strong id="score-name">SCORE2</strong>
+        <span id="score-desc">Für Alter &lt; 70 Jahre</span>
+      </div>
+      <div class="score-badge" id="score-display">8%</div>
+    </div>
+    <div class="slider-wrap">
+      <input type="range" id="score2" min="0" max="50" value="8" step="1"/>
+      <div class="slider-ticks">
+        <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span>
+      </div>
+    </div>
+    <div style="font-size:11px; color:var(--muted); margin-top:8px;">
+      Berechnen auf <a href="https://www.heartscore.org" style="color:var(--blue);" target="_blank">heartscore.org</a>
+    </div>
+  </div>
+
+  <!-- ═══ SEHR HOHES RISIKO ═══ -->
+  <div class="section-title">Automatisch sehr hohes Risiko?</div>
+  <div class="card">
+    <div class="check-item" data-key="ascvd" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>Dokumentierte ASCVD</strong>
+        <span>Herzinfarkt, Schlaganfall, pAVK, Koronarrevaskularisierung, ASCVD in Bildgebung</span>
+      </div>
+    </div>
+    <div class="check-item" data-key="dm_organ" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>DM mit Organschaden</strong>
+        <span>Mikroalbuminurie, Retinopathie oder Neuropathie – ODER ≥3 Hauptrisikofaktoren – ODER T1DM &gt;20 Jahre</span>
+      </div>
+    </div>
+    <div class="check-item" data-key="ckd_schwer" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>Schwere CKD</strong>
+        <span>eGFR &lt; 30 mL/min/1,73 m²</span>
+      </div>
+    </div>
+    <div class="check-item" data-key="fh_plus" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>FH + ASCVD oder weiterer Hauptrisikofaktor</strong>
+        <span>Familiäre Hypercholesterinämie mit zusätzlichem Risiko</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HOHES RISIKO ═══ -->
+  <div class="section-title">Automatisch hohes Risiko?</div>
+  <div class="card">
+    <div class="check-item" data-key="ldl_hoch" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>Stark erhöhte Einzelrisikofaktoren</strong>
+        <span>LDL-C &gt; 4,9 mmol/L ODER TC &gt; 8 mmol/L ODER RR ≥ 180/110 mmHg</span>
+      </div>
+    </div>
+    <div class="check-item" data-key="fh_allein" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>FH ohne weitere Hauptrisikofaktoren</strong>
+        <span>Familiäre Hypercholesterinämie isoliert</span>
+      </div>
+    </div>
+    <div class="check-item" data-key="dm_moderat" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>DM ohne Organschaden</strong>
+        <span>DM-Dauer ≥ 10 Jahre oder ein weiterer Risikofaktor</span>
+      </div>
+    </div>
+    <div class="check-item" data-key="ckd_moderat" onclick="toggle(this)">
+      <div class="check-box">✓</div>
+      <div class="check-text">
+        <strong>Moderate CKD</strong>
+        <span>eGFR 30–59 mL/min/1,73 m²</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EXTREMES RISIKO (nur wenn ASCVD) ═══ -->
+  <div id="extrem-section" style="display:none;">
+    <div class="section-title">Extremes Risiko?</div>
+    <div class="card">
+      <div class="check-item" data-key="rezidiv" onclick="toggle(this)">
+        <div class="check-box">✓</div>
+        <div class="check-text">
+          <strong>Rezidivierende Ereignisse</strong>
+          <span>Wiederholte vaskuläre Ereignisse unter maximaler Statintherapie ODER polyvask. Erkrankung (koronar + peripher)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ BUTTON ═══ -->
+  <button class="calc-btn" onclick="berechnen()">
+    Risiko & LDL-Ziel berechnen →
+  </button>
+
+  <!-- ═══ ERGEBNIS ═══ -->
+  <div id="result">
+
+    <div class="section-title" style="margin-top:32px;">Ergebnis</div>
+
+    <!-- Risikoklasse -->
+    <div id="res-risiko" class="result-risiko animate d1"></div>
+
+    <!-- LDL-C Ziel -->
+    <div class="result-ldl animate d2">
+      <div class="ldl-label">LDL-C Zielwert</div>
+      <div class="ldl-ziel-row">
+        <div class="ldl-ziel-val" id="res-ziel-mmol"></div>
+        <div class="ldl-ziel-unit">mg/dL</div>
+      </div>
+      <div class="ldl-ziel-mg" id="res-ziel-mg"></div>
+      <div class="ldl-status" id="res-status"></div>
+      <div class="ldl-reduktion" id="res-reduktion"></div>
+    </div>
+
+    <!-- Therapieempfehlung -->
+    <div class="result-therapie animate d3">
+      <div class="therapie-label">Therapieempfehlung</div>
+      <div class="therapie-text" id="res-therapie"></div>
+    </div>
+
+    <!-- Lp(a) Hinweis -->
+    <div class="result-lpa animate d4">
+      🧬 <strong>Lp(a) nicht vergessen:</strong> Mindestens einmalig im Leben messen.
+      Lp(a) &gt; 50 mg/dL (&gt; 105 nmol/L) gilt als eigenständiger Risikomodifikator
+      und kann die Risikoklasse erhöhen. <em>(ESC/EAS 2025, Klasse IIa)</em>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ Dieses Tool unterstützt klinische Entscheidungen und ersetzt nicht die individuelle
+      ärztliche Beurteilung. Basierend auf ESC/EAS 2025 Focused Update
+      · Eur Heart J (2025) 46, 4359–4378
+    </div>
+
+  </div><!-- /result -->
+</div><!-- /scroll -->
+
+<script>
+  // ─── State ───
+  const state = {
+    ascvd: false, dm_organ: false, ckd_schwer: false, fh_plus: false,
+    ldl_hoch: false, fh_allein: false, dm_moderat: false, ckd_moderat: false,
+    rezidiv: false
+  };
+
+  // ─── Alter → Score-Name aktualisieren ───
+  document.getElementById('alter').addEventListener('input', updateScoreName);
+  function updateScoreName() {
+    const a = parseInt(document.getElementById('alter').value) || 55;
+    const name = a >= 70 ? 'SCORE2-OP' : 'SCORE2';
+    const desc = a >= 70 ? 'Für Alter ≥ 70 Jahre' : 'Für Alter < 70 Jahre';
+    document.getElementById('score-name').textContent = name;
+    document.getElementById('score-desc').textContent = desc;
+  }
+
+  // ─── Slider ───
+  document.getElementById('score2').addEventListener('input', function() {
+    document.getElementById('score-display').textContent = this.value + '%';
+  });
+
+  // ─── Checkbox toggle ───
+  function toggle(el) {
+    const key = el.dataset.key;
+    state[key] = !state[key];
+    el.classList.toggle('checked', state[key]);
+    // Extremes-Risiko-Sektion zeigen/verstecken
+    document.getElementById('extrem-section').style.display =
+      state.ascvd ? 'block' : 'none';
+    if (!state.ascvd) state.rezidiv = false;
+  }
+
+  // ─── Risiko berechnen ───
+  function getRisiko(score2) {
+    if (state.ascvd && state.rezidiv)    return 'extrem';
+    if (state.ascvd || state.dm_organ || state.ckd_schwer || state.fh_plus || score2 >= 20)
+                                          return 'sehr_hoch';
+    if (state.ldl_hoch || state.fh_allein || state.dm_moderat || state.ckd_moderat || (score2 >= 10))
+                                          return 'hoch';
+    if (score2 >= 2)                      return 'moderat';
+    return 'niedrig';
+  }
+
+  // ─── Daten pro Risikoklasse (primär mg/dL) ───
+  const DATEN = {
+    extrem: {
+      label: '🔴 Extremes Risiko',
+      color: '#cc44cc', bg: 'linear-gradient(135deg,#2d0a2d,#1a0a1a)',
+      grund: 'Rezidivierende Ereignisse unter maximaler Statintherapie oder polyvask. Erkrankung.',
+      klasse: 'IIb',
+      ziel_mg: 40, ziel_mmol: 1.0,
+      therapie: 'Maximale Kombinationstherapie erforderlich: Hochintensives Statin + Ezetimib + PCSK9-Inhibitor (Alirocumab/Evolocumab). Überweisung an Lipidsprechstunde empfohlen. LDL-C-Kontrolle nach 4–6 Wochen.'
+    },
+    sehr_hoch: {
+      label: '🔴 Sehr hohes Risiko',
+      color: '#e94560', bg: 'linear-gradient(135deg,#3d1a1a,#1a0f0f)',
+      grund: 'Dokumentierte ASCVD, SCORE2/SCORE2-OP ≥ 20%, DM mit Organschaden, schwere CKD oder FH + ASCVD.',
+      klasse: 'I',
+      ziel_mg: 55, ziel_mmol: 1.4,
+      therapie: 'Hochintensives Statin (max. Dosis) als Erstlinie. Ziel: < 55 mg/dL (1,4 mmol/L) UND ≥ 50 % Reduktion vom Ausgangswert. Bei Nichterreichen: + Ezetimib, dann + PCSK9-Inhibitor oder Bempedoinsäure. LDL-C-Kontrolle nach 4–6 Wochen.'
+    },
+    hoch: {
+      label: '🟠 Hohes Risiko',
+      color: '#f0a040', bg: 'linear-gradient(135deg,#3d2a0a,#1a1208)',
+      grund: 'SCORE2/SCORE2-OP 10–19%, stark erhöhte Einzelrisikofaktoren, FH, DM ohne Organschaden oder moderate CKD.',
+      klasse: 'I',
+      ziel_mg: 70, ziel_mmol: 1.8,
+      therapie: 'Hochintensives Statin als Erstlinie. Ziel: < 70 mg/dL (1,8 mmol/L) UND ≥ 50 % Reduktion. Bei Nichterreichen: + Ezetimib, ggf. + PCSK9-Inhibitor oder Bempedoinsäure. LDL-C-Kontrolle nach 4–6 Wochen.'
+    },
+    moderat: {
+      label: '🔵 Moderates Risiko',
+      color: '#4fc3f7', bg: 'linear-gradient(135deg,#0a1e2d,#081420)',
+      grund: 'SCORE2/SCORE2-OP 2–9 %.',
+      klasse: 'IIa',
+      ziel_mg: 100, ziel_mmol: 2.6,
+      therapie: 'Lebensstilmodifikation als Basis (Ernährung, Bewegung, Rauchentwöhnung). Pharmakotherapie erwägen wenn LDL-C ≥ 100 mg/dL trotz Lebensstiloptimierung. Erstlinie: Moderat- bis hochintensives Statin, ggf. + Ezetimib.'
+    },
+    niedrig: {
+      label: '🟢 Niedriges Risiko',
+      color: '#4caf9e', bg: 'linear-gradient(135deg,#0a2018,#081510)',
+      grund: 'SCORE2/SCORE2-OP < 2 %.',
+      klasse: 'IIb',
+      ziel_mg: 116, ziel_mmol: 3.0,
+      therapie: 'Lebensstilmodifikation als Hauptmaßnahme. Medikamentöse Therapie nur bei LDL-C ≥ 116 mg/dL trotz konsequenter Lebensstiländerung erwägen. Regelmäßige Risikoneubewertung empfohlen.'
+    }
+  };
+
+  // ─── Haupt-Berechnung ───
+  function berechnen() {
+    const alter    = parseInt(document.getElementById('alter').value) || 55;
+    const ldl_mg   = parseFloat(document.getElementById('ldl').value) || 135;
+    const score2   = parseInt(document.getElementById('score2').value) || 0;
+    const scoreName = alter >= 70 ? 'SCORE2-OP' : 'SCORE2';
+
+    const risiko = getRisiko(score2);
+    const d = DATEN[risiko];
+
+    // Risiko-Box
+    document.getElementById('res-risiko').innerHTML = `
+      <div class="risiko-label">Risikoklassifikation · ESC/EAS 2025</div>
+      <div class="risiko-name">${d.label}</div>
+      <div class="risiko-grund">${d.grund}</div>
+      <div class="risiko-score-info">${scoreName} = ${score2}% · Alter: ${alter} Jahre</div>
+    `;
+    document.getElementById('res-risiko').style.background = d.bg;
+    document.getElementById('res-risiko').style.borderLeft = `5px solid ${d.color}`;
+    document.getElementById('res-risiko').style.color = '#e8e8f4';
+
+    // LDL-Ziel – primär mg/dL, mmol/L als Klammer
+    document.getElementById('res-ziel-mmol').textContent = '< ' + d.ziel_mg;
+    document.getElementById('res-ziel-mg').textContent =
+      `mg/dL  (< ${d.ziel_mmol} mmol/L) · Empfehlungsklasse ${d.klasse}`;
+
+    const abstand_mg = Math.max(0, ldl_mg - d.ziel_mg);
+    const prozent    = ldl_mg > 0 ? Math.round((abstand_mg / ldl_mg) * 100) : 0;
+
+    const statusEl = document.getElementById('res-status');
+    if (ldl_mg <= d.ziel_mg) {
+      statusEl.className = 'ldl-status ok';
+      statusEl.textContent = '✅ LDL-C-Ziel bereits erreicht!';
+    } else {
+      statusEl.className = 'ldl-status warn';
+      statusEl.textContent = `⚠️ Ziel noch nicht erreicht · Aktuell: ${ldl_mg} mg/dL`;
+    }
+
+    document.getElementById('res-reduktion').innerHTML = ldl_mg > d.ziel_mg ? `
+      <div class="ldl-red-box">
+        <strong>${abstand_mg.toFixed(0)}</strong>
+        <span>mg/dL Senkungsbedarf</span>
+      </div>
+      <div class="ldl-red-box">
+        <strong>${prozent}%</strong>
+        <span>Reduktion erforderlich</span>
+      </div>
+    ` : '';
+
+    // Therapie
+    document.getElementById('res-therapie').textContent = d.therapie;
+
+    // Anzeigen & scrollen
+    const resultEl = document.getElementById('result');
+    resultEl.classList.add('visible');
+
+    // Animations-Reset
+    document.querySelectorAll('.animate').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = '';
+    });
+
+    setTimeout(() => {
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  // ─── Service Worker ───
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  // Init
+  updateScoreName();
+</script>
+</body>
+</html>
