@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Mitralinsuffizienz"/>
+  <meta name="theme-color" content="#0a0a1a"/>
+  <title>MedTools – Mitralinsuffizienz</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <style>
+    :root {
+      --bg:#0a0a1a; --surface:#12122a; --surface2:#1a1a3a; --border:#2a2a4e;
+      --red:#e94560; --orange:#f0a040; --blue:#4fc3f7; --green:#4caf9e;
+      --purple:#9c6fde; --teal:#00bcd4; --text:#e8e8f4; --muted:#7878a0;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; min-height: -webkit-fill-available; overflow-x: hidden;
+    }
+
+    .header {
+      background: linear-gradient(180deg, #0f0f28 0%, var(--bg) 100%);
+      padding: calc(var(--safe-top) + 14px) 20px 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .header-row { text-align: center; }
+    .back { display: inline-flex; align-items: center; gap: 5px; font-size: 13px;
+            color: var(--muted); text-decoration: none; margin-bottom: 8px; float: left; }
+    .back:active { opacity: 0.6; }
+    .header-badge {
+      display: inline-block; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--red); background: #e9456015; border: 1px solid #e9456030;
+      border-radius: 20px; padding: 3px 10px; margin-bottom: 6px; clear: both;
+    }
+    .header h1 { font-family: 'DM Serif Display', serif; font-size: 19px; font-weight: normal; color: var(--text); letter-spacing: 0.3px; }
+    .header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .tabs { display: flex; gap: 4px; margin-top: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 0 0 auto; padding: 10px 13px 12px; font-size: 12px; font-weight: 500;
+      color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: color 0.15s, border-color 0.15s;
+      font-family: 'DM Sans', sans-serif; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--text); border-bottom-color: var(--red); }
+
+    .scroll { padding: 18px 14px calc(var(--safe-bot) + 40px); max-width: 540px; margin: 0 auto; }
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-title { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin: 22px 2px 10px; }
+    .section-title:first-child { margin-top: 4px; }
+    .lead { font-size: 13px; color: #c0c0e0; line-height: 1.7; margin-bottom: 4px; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+    .card-accent { border-left: 4px solid var(--border); }
+    .a-red{border-left-color:var(--red);} .a-orange{border-left-color:var(--orange);}
+    .a-blue{border-left-color:var(--blue);} .a-green{border-left-color:var(--green);}
+    .a-purple{border-left-color:var(--purple);} .a-teal{border-left-color:var(--teal);}
+    .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .card-icon { font-size: 20px; }
+    .card-title { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--text); flex: 1; }
+    .card-sub { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+
+    .ind-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.55; align-items: flex-start; }
+    .ind-item:last-child { border-bottom: none; }
+    .ind-bullet { min-width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-top: 7px; }
+    .b-red{background:var(--red);} .b-orange{background:var(--orange);} .b-blue{background:var(--blue);}
+    .b-green{background:var(--green);} .b-purple{background:var(--purple);}
+    .ind-text { flex: 1; color: #d8d8ec; }
+    .ind-text strong { color: var(--text); font-weight: 600; }
+
+    .ce { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 6px; margin-left: 4px; white-space: nowrap; vertical-align: middle; }
+    .ce-1{background:#4caf9e20;color:var(--green);border:1px solid #4caf9e35;}
+    .ce-2a{background:#4fc3f720;color:var(--blue);border:1px solid #4fc3f735;}
+    .ce-2b{background:#f0a04020;color:var(--orange);border:1px solid #f0a04035;}
+    .ce-3{background:#e9456020;color:var(--red);border:1px solid #e9456035;}
+
+    .hl-box { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+    .hl-box-title { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .hl-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; line-height: 1.4; }
+    .hl-row + .hl-row { border-top: 1px solid var(--border); }
+    .hl-label { color: #d8d8ec; flex: 1; }
+    .hl-val { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--red); white-space: nowrap; }
+    .hl-val.v-orange{color:var(--orange);} .hl-val.v-blue{color:var(--blue);} .hl-val.v-green{color:var(--green);} .hl-val.v-purple{color:var(--purple);}
+
+    .flow-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface2); margin-bottom: 8px; }
+    .flow-tag { font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 8px; min-width: 80px; text-align: center; white-space: nowrap; }
+    .ft-red{background:#e9456020;color:var(--red);} .ft-orange{background:#f0a04020;color:var(--orange);}
+    .ft-green{background:#4caf9e20;color:var(--green);} .ft-blue{background:#4fc3f720;color:var(--blue);}
+    .flow-arrow { color: var(--muted); font-size: 16px; }
+    .flow-text { flex: 1; font-size: 12.5px; line-height: 1.5; color: #d8d8ec; }
+    .flow-text strong { color: var(--text); }
+
+    .med-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 4px 0; margin-bottom: 10px; overflow: hidden; }
+    .med-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); }
+    .med-head-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text); }
+    .med-head-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .med-row { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+    .med-row:last-child { border-bottom: none; }
+    .med-info { flex: 1; }
+    .med-name { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.4; }
+    .med-dose { font-size: 12px; color: var(--blue); margin-top: 3px; line-height: 1.5; }
+    .med-note { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .med-ce { flex: 0 0 auto; padding-top: 2px; }
+
+    .callout { border-radius: 14px; padding: 13px 15px; margin: 10px 0; font-size: 12px; line-height: 1.65; }
+    .callout strong { font-weight: 600; }
+    .co-purple{background:#9c6fde12;border:1px solid #9c6fde30;color:#c0a0f0;}
+    .co-blue{background:#4fc3f712;border:1px solid #4fc3f730;color:#a0d8f0;}
+    .co-orange{background:#f0a04012;border:1px solid #f0a04030;color:#f0c890;}
+    .co-green{background:#4caf9e12;border:1px solid #4caf9e30;color:#90d8c8;}
+    .co-red{background:#e9456012;border:1px solid #e9456030;color:#f0a0b0;}
+
+    .acc { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 10px; overflow: hidden; }
+    .acc summary { list-style: none; cursor: pointer; padding: 15px 16px; display: flex; align-items: center; gap: 10px; font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text); }
+    .acc summary::-webkit-details-marker { display: none; }
+    .acc .acc-icon { font-size: 19px; }
+    .acc .acc-chev { margin-left: auto; color: var(--muted); font-size: 13px; transition: transform 0.2s; }
+    .acc[open] .acc-chev { transform: rotate(180deg); }
+    .acc-body { padding: 0 16px 16px; }
+    .acc-body p { font-size: 12.5px; line-height: 1.7; color: #d8d8ec; margin-bottom: 10px; }
+    .acc-body p strong { color: var(--text); }
+
+    .disclaimer { font-size: 10px; color: var(--border); text-align: center; line-height: 1.6; padding: 24px 8px 8px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <a href="index.html" class="back">← MedTools</a>
+    <div class="header-badge">ESC / EACTS 2025</div>
+    <h1>Mitralinsuffizienz</h1>
+    <p>Primär · Sekundär · Diagnostik · Therapie</p>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-page="grund">Grundlagen</button>
+    <button class="tab" data-page="echo">Echo-Kriterien</button>
+    <button class="tab" data-page="primaer">Primäre MR</button>
+    <button class="tab" data-page="sekundaer">Sekundäre MR</button>
+    <button class="tab" data-page="fu">Follow-up</button>
+  </div>
+</div>
+
+<div class="scroll">
+
+  <!-- ══════════════════════ GRUNDLAGEN ══════════════════════ -->
+  <div class="page active" id="page-grund">
+
+    <p class="lead">Die <strong>MR (Mitralinsuffizienz / Mitralklappenregurgitation)</strong> ist eine der häufigsten erworbenen Klappenerkrankungen. Entscheidend ist die Unterscheidung der Ätiologie, da sich Verlauf, Prognose und Therapie grundlegend unterscheiden.</p>
+
+    <div class="section-title">Primär vs. Sekundär</div>
+
+    <div class="card card-accent a-blue">
+      <div class="card-head">
+        <span class="card-icon">🔵</span>
+        <span class="card-title">Primäre MR (PMR)</span>
+      </div>
+      <div class="card-sub">Strukturelle Schädigung des Klappenapparats selbst — die Klappe ist die Ursache.</div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Anatomische Veränderungen: Prolaps, Flail, Sehnenfadenruptur, Endokarditis, rheumatisch, Anulusverkalkung (MAC, mitrale Anulus­kalzifikation)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Therapieziel: <strong>anatomische Korrektur</strong> (bevorzugt Klappenrekonstruktion)</div>
+      </div>
+    </div>
+
+    <div class="card card-accent a-orange">
+      <div class="card-head">
+        <span class="card-icon">🟠</span>
+        <span class="card-title">Sekundäre MR (SMR)</span>
+      </div>
+      <div class="card-sub">Klappe morphologisch weitgehend normal, aber inkompetent durch veränderte LV-/LA-Geometrie (linksventrikulär/linksatrial). Funktionelle MR.</div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>Ventrikuläre SMR</strong> — häufiger, schlechtere Prognose. Ursache meist dilatative oder ischämische Kardiomyopathie; Leaflet-Tethering + Anulusdilatation</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>Atriale SMR</strong> — bei erhaltener LVEF, durch LA-Dilatation (oft HFpEF, Herzinsuffizienz mit erhaltener EF, und Vorhofflimmern); Anulusdilatation mit planarer Koaptation</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">Therapieziel: <strong>Grunderkrankung behandeln</strong> (Herzinsuffizienz / Vorhofflimmern), Klappe sekundär</div>
+      </div>
+    </div>
+
+    <div class="callout co-blue">
+      <strong>💡 Prävalenz SMR:</strong> ~10 % bei chronischer Herzinsuffizienz, deutlich häufiger bei reduzierter vs. erhaltener LVEF (25 % vs. 4 %).
+    </div>
+
+    <div class="section-title">Diagnostik</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>TTE</strong> (transthorakale Echokardiografie) — Erstdiagnostik: Klappenmorphologie, Schweregrad, LV-/LA-Dimensionen & Funktion, RV-Funktion (rechtsventrikulär)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>TEE</strong> (transösophageale Echokardiografie) — Methode der Wahl für Klappenanatomie, Leaflet-Qualität & Koaptation; 3D-TEE systematisch bei Planung von chirurgischer/Katheter-Reparatur</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-purple"></div>
+        <div class="ind-text"><strong>CMR</strong> (kardiale Magnetresonanztomografie) — präzise RVol/RF-Quantifizierung (Regurgitationsvolumen/-fraktion) bei diskordanten Befunden; Goldstandard für Kammervolumina; Fibrosenachweis (prognostisch)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>Belastungs-Echo</strong> — bei dynamischer SMR oder diskordanten Symptomen; beurteilt Regurgitation & Pulmonalisdruck unter Belastung</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>CCT</strong> (kardiale Computertomografie) — Procedural Planning bei MAC und TMVI (Transkatheter-Mitralklappen­implantation): Anulusgröße, Risiko der LVOT-Obstruktion (linksventrikulärer Ausflusstrakt)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-purple"></div>
+        <div class="ind-text"><strong>Rechtsherzkatheter</strong> — bei Diskrepanz zwischen echokardiografischer MR-Schwere und Symptomen; Bestätigung des Pulmonalisdrucks</div>
+      </div>
+    </div>
+
+    <div class="callout co-purple">
+      <strong>🧬 Biomarker:</strong> NT-proBNP (N-terminales pro-B-Typ natriuretisches Peptid) korreliert mit der NYHA-Klasse (New York Heart Association) und ist prognostisch relevant.
+    </div>
+  </div>
+
+  <!-- ══════════════════════ ECHO-KRITERIEN ══════════════════════ -->
+  <div class="page" id="page-echo">
+
+    <p class="lead">Die Schweregradbeurteilung kombiniert qualitative, semiquantitative und quantitative Parameter. Bei SMR gelten teils <strong>niedrigere Schwellen</strong> wegen ellipsenförmiger Regurgitationsöffnung und Low-flow-Zustand.</p>
+
+    <div class="section-title">Schwere primäre MR — Quantitativ</div>
+
+    <div class="hl-box">
+      <div class="hl-box-title">Quantitative Schwellen (PMR)</div>
+      <div class="hl-row">
+        <span class="hl-label">EROA (effektive Regurgitationsöffnung)</span>
+        <span class="hl-val">≥ 40 mm²</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">RVol (Regurgitationsvolumen)</span>
+        <span class="hl-val">≥ 60 mL</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">RF (Regurgitationsfraktion)</span>
+        <span class="hl-val">≥ 50 %</span>
+      </div>
+    </div>
+    <div class="card-sub" style="margin:0 2px 12px;">EROA = effective regurgitant orifice area; RVol = regurgitant volume; RF = regurgitant fraction. Genaue Farb-Doppler-Einstellungen verwenden, um Überschätzung zu vermeiden.</div>
+
+    <div class="section-title">Schwere sekundäre MR — Quantitativ</div>
+
+    <div class="hl-box">
+      <div class="hl-box-title">Niedrigere Schwellen mit prognostischer Relevanz (SMR)</div>
+      <div class="hl-row">
+        <span class="hl-label">EROA</span>
+        <span class="hl-val v-orange">≥ 30 mm²</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">RVol</span>
+        <span class="hl-val v-orange">≥ 45 mL</span>
+      </div>
+    </div>
+    <div class="callout co-orange">
+      <strong>⚠️ Wichtig:</strong> SMR-Beurteilung erst <strong>nach Optimierung der medikamentösen Therapie</strong> und im euvolämen, normotensiven Zustand durchführen — die SMR ist dynamisch und lastabhängig.
+    </div>
+
+    <div class="section-title">Kriterien atriale SMR</div>
+    <div class="card">
+      <div class="card-sub" style="margin-bottom:10px;">Atriale SMR wird typischerweise definiert durch:</div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Erhaltene LVEF <strong>≥ 50 %</strong> ohne regionale Wandbewegungs­störung oder Leaflet-Tethering</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Kein/gering dilatierter LV (enddiastolischer Durchmesser &lt; 56 mm ♀ / &lt; 63 mm ♂)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Mitralanulus-Dilatation (anteroposteriorer Durchmesser &gt; 35 mm)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Vergrößerter LA (LAVI, linksatrialer Volumenindex, &gt; 34 mL/m²)</div>
+      </div>
+    </div>
+
+    <div class="section-title">Prognostisch ungünstige Marker</div>
+    <div class="hl-box">
+      <div class="hl-box-title">Bei PMR — sollten frühe Zuweisung anstoßen</div>
+      <div class="hl-row"><span class="hl-label">SPAP in Ruhe (systolischer Pulmonalisdruck)</span><span class="hl-val v-orange">&gt; 50 mmHg</span></div>
+      <div class="hl-row"><span class="hl-label">LA-Dilatation (LAVI)</span><span class="hl-val v-orange">≥ 60 mL/m²</span></div>
+      <div class="hl-row"><span class="hl-label">LA-Durchmesser</span><span class="hl-val v-orange">≥ 55 mm</span></div>
+      <div class="hl-row"><span class="hl-label">Begleitende sekundäre TR (Trikuspidalinsuffizienz)</span><span class="hl-val v-orange">≥ moderat</span></div>
+      <div class="hl-row"><span class="hl-label">Vorhofflimmern</span><span class="hl-val v-orange">vorhanden</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ PRIMÄRE MR ══════════════════════ -->
+  <div class="page" id="page-primaer">
+
+    <p class="lead">Bei der <strong>primären MR</strong> ist die Wiederherstellung der Anatomie durch chirurgische Klappenrekonstruktion (inkl. Anuloplastie) die Therapie der Wahl bei operablen Patienten mit erwartet dauerhaftem Ergebnis.</p>
+
+    <div class="section-title">Medikamentöse Therapie</div>
+
+    <div class="callout co-red">
+      <strong>⛔ Begrenzte Rolle:</strong> Bei chronischer PMR ohne LV-Dysfunktion oder Interventions­kriterien gibt es <strong>keine Evidenz</strong> für prophylaktische Nachlastsenkung. Medikamente ersetzen keine indizierte Operation.
+    </div>
+
+    <div class="med-card">
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">Akute schwere PMR</div>
+          <div class="med-dose">Natrium-Nitroprussid (Nachlastsenkung) · Inotropika · Diuretika · ggf. IABP</div>
+          <div class="med-note">IABP = intraaortale Ballonpumpe. Nur als Bridge zur Intervention; akute schwere PMR wird hämodynamisch schlecht toleriert.</div>
+        </div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">PMR + eingeschränkte LV-Funktion</div>
+          <div class="med-dose">GDMT nach Herzinsuffizienz-Leitlinien</div>
+          <div class="med-note">GDMT = leitliniengerechte medikamentöse Therapie.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Intervention — symptomatisch</div>
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>MV-Rekonstruktion</strong> ist die empfohlene chirurgische Technik bei schwerer PMR, wenn dauerhaftes Ergebnis erwartet wird (MV = Mitralklappe) <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">MV-Chirurgie empfohlen bei symptomatischen Patienten mit schwerer PMR, die vom Heart Team als operabel eingestuft werden <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>TEER</strong> (Transkatheter-Edge-to-Edge-Reparatur, z.B. MitraClip) sollte erwogen werden bei symptomatischen Patienten mit schwerer PMR, anatomisch geeignet und hohem OP-Risiko <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Intervention — asymptomatisch</div>
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">MV-Chirurgie empfohlen bei LV-Dysfunktion: LVESD ≥ 40 mm <em>oder</em> LVESDi ≥ 20 mm/m² <em>oder</em> LVEF ≤ 60 % (LVESD = linksventrikulärer endsystolischer Durchmesser, i = indexiert) <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">MV-Chirurgie sollte erwogen werden ohne LV-Dysfunktion (LVESD &lt; 40 mm, LVEF &gt; 60 %) bei pulmonaler Hypertonie (SPAP Ruhe &gt; 50 mmHg) <em>oder</em> Vorhofflimmern sekundär zur MR <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Chirurgische MV-Rekonstruktion sollte erwogen werden bei Niedrigrisiko-Patienten ohne LV-Dysfunktion + signifikanter LA-Dilatation (LAVI ≥ 60 mL/m² oder ≥ 55 mm), wenn dauerhafte Reparatur am Heart Valve Centre wahrscheinlich <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">Chirurgische MV-Rekonstruktion <strong>empfohlen</strong> bei Niedrigrisiko-Asymptomatischen ohne LV-Dysfunktion, wenn dauerhaft + <strong>≥ 3 der folgenden Kriterien</strong>: Vorhofflimmern · SPAP &gt; 50 mmHg · LA-Dilatation (LAVI ≥ 60 mL/m² oder ≥ 55 mm) · begleitende sekundäre TR ≥ moderat <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+    </div>
+
+    <div class="callout co-green">
+      <strong>✅ Rekonstruktion vor Ersatz:</strong> MV-Reparatur (niedrige Mortalität ~1,2 %) ist dem Ersatz überlegen — geringere periinterventionelle Mortalität, bessere Langzeitüberleben und Funktion. Wenn Reparatur nicht möglich: Ersatz mit Erhalt des Subvalvularapparats.
+    </div>
+
+    <details class="acc">
+      <summary>
+        <span class="acc-icon">🔧</span>
+        Verfahren & Sonderfälle
+        <span class="acc-chev">▼</span>
+      </summary>
+      <div class="acc-body">
+        <p><strong>Minimalinvasive Chirurgie</strong> (rechtsseitige Mini-Thorakotomie) kann an erfahrenen Zentren erwogen werden, um Liegedauer zu verkürzen und Erholung zu beschleunigen <span class="ce ce-2b">IIb&nbsp;B</span>. Ein RCT (randomisierte kontrollierte Studie) zeigte vergleichbare Sicherheit/Effektivität zur Sternotomie.</p>
+        <p><strong>M-TEER</strong> (mitrale Transkatheter-Edge-to-Edge-Reparatur) — Option für Hochrisiko- und ältere Patienten. <strong>TMVI</strong> (Transkatheter-Mitralklappen­implantation) sehr effektiv bei selektierten Hochrisikopatienten mit komplexer Anatomie, aber: begrenzte Verfügbarkeit, hohe Screening-Failure-Rate, Risiko von LVOT-Obstruktion und Klappenthrombose.</p>
+        <p><strong>Mitralklappenprolaps + mitrale Anulusdisjunktion:</strong> ventrikuläre Arrhythmien sind mit ungünstiger Prognose und möglichem plötzlichem Herztod assoziiert. Ring-Anuloplastie kann Arrhythmierisiko senken.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ══════════════════════ SEKUNDÄRE MR ══════════════════════ -->
+  <div class="page" id="page-sekundaer">
+
+    <p class="lead">Bei der <strong>sekundären MR</strong> steht die Behandlung der Grunderkrankung im Vordergrund. Eine Klappenintervention kommt erst nach Ausschöpfung der medikamentösen Therapie (und CRT, falls indiziert) in Betracht.</p>
+
+    <div class="section-title">Ventrikuläre SMR — Medikamentös</div>
+
+    <div class="med-card">
+      <div class="med-head">
+        <div class="med-head-title">GDMT vor jeder MV-Intervention</div>
+        <div class="med-head-sub">Maximal tolerierte Dosen nach Herzinsuffizienz-Leitlinien · rasche Auftitrierung (innerhalb 6 Wochen)</div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">ACE-Hemmer / ARB / ARNI</div>
+          <div class="med-dose">max. tolerierte Dosis</div>
+          <div class="med-note">ARB = Angiotensin-Rezeptor-Blocker; ARNI = Angiotensin-Rezeptor-Neprilysin-Inhibitor (Sacubitril/Valsartan)</div>
+        </div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">Beta-Blocker</div>
+          <div class="med-dose">max. tolerierte Dosis</div>
+        </div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">MRA (Mineralokortikoid-Rezeptor-Antagonist)</div>
+          <div class="med-dose">z.B. Spironolacton / Eplerenon</div>
+        </div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">SGLT2-Inhibitor</div>
+          <div class="med-dose">z.B. Dapagliflozin / Empagliflozin</div>
+          <div class="med-note">SGLT2 = Natrium-Glukose-Cotransporter 2</div>
+        </div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">CRT (kardiale Resynchronisations­therapie)</div>
+          <div class="med-dose">bei LVEF ≤ 35 % + breitem QRS</div>
+          <div class="med-note">Vor MV-Intervention erwägen. SMR-Reduktion um ≥ 1 Grad bei 40–60 %, assoziiert mit reverse remodeling.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout co-green">
+      <strong>✅ Merke:</strong> Etwa 40 % der ventrikulären SMR bessern sich nach 1–3 Monaten optimierter GDMT. Daher GDMT ausschöpfen, bevor eine Klappenintervention geplant wird.
+    </div>
+
+    <div class="section-title">Ventrikuläre SMR ohne KHK — Intervention</div>
+    <div class="card-sub" style="margin:0 2px 10px;">KHK = koronare Herzkrankheit. Entscheidung durch multidisziplinäres Heart Team inkl. Herzinsuffizienz-Spezialisten.</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>TEER empfohlen</strong> zur Reduktion von HI-Hospitalisierungen und Verbesserung der Lebensqualität bei hämodynamisch stabilen, symptomatischen Patienten mit LVEF &lt; 50 % und persistierender schwerer ventrikulärer SMR trotz optimierter GDMT und CRT, wenn spezifische klinische & echokardiografische Kriterien erfüllt* <span class="ce ce-1">I&nbsp;A</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">TEER <strong>kann erwogen werden</strong> zur Symptomverbesserung bei Patienten, die die spezifischen Kriterien nicht erfüllen — nach sorgfältiger Evaluation von LVAD oder HTx (Herzunterstützungssystem / Herztransplantation) <span class="ce ce-2b">IIb&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">MV-Chirurgie kann erwogen werden bei symptomatischen Patienten ohne fortgeschrittene HI, die für TEER nicht geeignet sind <span class="ce ce-2b">IIb&nbsp;C</span></div>
+      </div>
+    </div>
+
+    <div class="hl-box">
+      <div class="hl-box-title">* COAPT-ähnliche Kriterien (erhöhte TEER-Ansprechwahrscheinlichkeit)</div>
+      <div class="hl-row"><span class="hl-label">NYHA-Klasse</span><span class="hl-val v-blue">II–IV</span></div>
+      <div class="hl-row"><span class="hl-label">BNP / NT-proBNP</span><span class="hl-val v-blue">≥ 300 / ≥ 1000 pg/mL</span></div>
+      <div class="hl-row"><span class="hl-label">SPAP</span><span class="hl-val v-blue">≤ 70 mmHg</span></div>
+      <div class="hl-row"><span class="hl-label">Keine schwere RV-Dysfunktion</span><span class="hl-val v-green">✓</span></div>
+      <div class="hl-row"><span class="hl-label">Keine fortgeschrittene HI (Stadium D)</span><span class="hl-val v-green">✓</span></div>
+      <div class="hl-row"><span class="hl-label">Keine revaskularisierungs­bedürftige KHK</span><span class="hl-val v-green">✓</span></div>
+    </div>
+
+    <div class="callout co-blue">
+      <strong>📊 Evidenz TEER bei ventrikulärer SMR:</strong> COAPT (NEJM 2018) zeigte reduzierte HI-Hospitalisierung & Gesamtmortalität vs. GDMT bei Patienten ohne relevante KHK. MITRA-FR war negativ (unterschiedliche Patientenselektion/Effektgrößen). RESHAPE-HF-2 bestätigte Reduktion von HI-Hospitalisierung/kardiovaskulärem Tod. MATTERHORN: TEER nicht-unterlegen ggü. Chirurgie bei besserem Sicherheitsprofil.
+    </div>
+
+    <div class="section-title">Ventrikuläre SMR mit KHK — Intervention</div>
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">MV-Chirurgie empfohlen bei schwerer ventrikulärer SMR, die ohnehin CABG (koronare Bypass-Operation) erhält <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">MV-Chirurgie kann erwogen werden bei moderater SMR im Rahmen einer CABG <span class="ce ce-2b">IIb&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">PCI (perkutane Koronarintervention) gefolgt von TEER nach MR-Reevaluation kann erwogen werden bei symptomatischer chronischer schwerer ventrikulärer SMR + nicht-komplexer KHK <span class="ce ce-2b">IIb&nbsp;C</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Atriale SMR</div>
+    <div class="card">
+      <div class="card-sub" style="margin-bottom:10px;">Grundlage: Optimierung der medikamentösen Therapie inkl. Frequenz-/Rhythmuskontrolle. SGLT2-Inhibitoren bei HFpEF empfohlen.</div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">MV-Chirurgie, ggf. chirurgische Vorhofflimmer-Ablation und LAAO (Vorhofohr­verschluss) sollten erwogen werden bei symptomatischer schwerer atrialer SMR unter optimaler medikamentöser Therapie <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">TEER kann erwogen werden bei symptomatischer schwerer atrialer SMR, die für Chirurgie nicht geeignet ist, nach Optimierung inkl. Rhythmuskontrolle <span class="ce ce-2b">IIb&nbsp;B</span></div>
+      </div>
+    </div>
+
+    <div class="callout co-orange">
+      <strong>⚠️ Sehr gebrechliche Patienten</strong> oder solche mit begrenzter Lebenserwartung: GDMT bleibt die einzige Option.
+    </div>
+  </div>
+
+  <!-- ══════════════════════ FOLLOW-UP ══════════════════════ -->
+  <div class="page" id="page-fu">
+
+    <p class="lead">Verlaufskontrollen idealerweise an einem <strong>Heart Valve Centre / Heart Valve Clinic</strong>. Intervalle richten sich nach Schweregrad, Symptomen und durchgeführter Intervention.</p>
+
+    <div class="section-title">Konservatives Vorgehen (Watchful Waiting)</div>
+
+    <div class="flow-item">
+      <span class="flow-tag ft-red">2× / Jahr</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text"><strong>Asymptomatische schwere MR</strong> ohne Interventionskriterien, mit erhaltener Belastungskapazität — klinisch & echokardiografisch halbjährlich.</span>
+    </div>
+    <div class="flow-item">
+      <span class="flow-tag ft-orange">jährlich</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text"><strong>Asymptomatische moderate MR</strong> mit erhaltener LV-Funktion — Echo alle 1–2 Jahre.</span>
+    </div>
+    <div class="flow-item">
+      <span class="flow-tag ft-orange">jährlich</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text"><strong>Atriale SMR</strong> ohne Interventionskriterien — mindestens jährlich klinisch & echokardiografisch; bei HFpEF HF-Spezialist hinzuziehen.</span>
+    </div>
+
+    <div class="callout co-purple">
+      <strong>🧪 Ergänzend:</strong> Serielle BNP-Bestimmung, EKG und/oder Holter-Monitoring; in selektierten Fällen Belastungs-Echo und CMR zur Bestätigung von MR-Schwere und Kammerfunktion.
+    </div>
+
+    <div class="section-title">Nach Intervention</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>Nach MV-Reparatur bei PMR (Prolaps):</strong> sehr gute Langzeit­haltbarkeit (87,5 % frei von moderater/schwerer MR nach 20 J). Serielle Kontrolle alle <strong>2–3 Jahre</strong>, wenn keine präoperative LV-Dysfunktion/Rhythmusstörung.</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>Nach MV-Ersatz:</strong> engere Kontrolle <strong>jährlich</strong> wegen Risiko von Prothesendysfunktion / SVD (struktureller Klappendegeneration)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>Nach TEER:</strong> höhere Raten an Rest-MR und erhöhtem transmitralem Gradienten als nach chirurgischer Reparatur → <strong>jährliches</strong> Follow-up angemessen</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>Nach Intervention bei atrialer SMR:</strong> jährlich klinisch & echokardiografisch</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-purple"></div>
+        <div class="ind-text">Bei Arrhythmien möglicherweise mit MV-Erkrankung assoziiert: kontinuierliches EKG-Monitoring</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EVIDENZ-LEGENDE (global) ═══ -->
+  <div class="section-title">Empfehlungsklassen</div>
+  <div class="card">
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-1">I</span> &nbsp;Empfohlen / indiziert</span></div>
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-2a">IIa</span> &nbsp;Sollte erwogen werden</span></div>
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-2b">IIb</span> &nbsp;Kann erwogen werden</span></div>
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-3">III</span> &nbsp;Nicht empfohlen</span></div>
+    <div class="card-sub" style="margin-top:10px;margin-bottom:0;">Evidenzgrad: <strong>A</strong> = mehrere RCTs (randomisierte kontrollierte Studien)/Metaanalysen · <strong>B</strong> = 1 RCT / große Beobachtungsstudien · <strong>C</strong> = Expertenkonsens.</div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ Klinische Entscheidungsunterstützung · ersetzt nicht die individuelle ärztliche Beurteilung.<br>
+    Quelle: 2025 ESC/EACTS Guidelines for the management of valvular heart disease (Eur Heart J 2025;46:4635) · Studien: COAPT, MITRA-FR, RESHAPE-HF-2, MATTERHORN
+  </div>
+
+</div><!-- /scroll -->
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const pages = document.querySelectorAll('.page');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.page;
+      tabs.forEach(t => t.classList.remove('active'));
+      pages.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('page-' + target).classList.add('active');
+      tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
