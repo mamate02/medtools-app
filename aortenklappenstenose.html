@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Aortenstenose"/>
+  <meta name="theme-color" content="#0a0a1a"/>
+  <title>MedTools – Aortenklappenstenose</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <style>
+    :root {
+      --bg:        #0a0a1a;
+      --surface:   #12122a;
+      --surface2:  #1a1a3a;
+      --border:    #2a2a4e;
+      --red:       #e94560;
+      --orange:    #f0a040;
+      --blue:      #4fc3f7;
+      --green:     #4caf9e;
+      --purple:    #9c6fde;
+      --teal:      #00bcd4;
+      --text:      #e8e8f4;
+      --muted:     #7878a0;
+      --safe-top:  env(safe-area-inset-top, 0px);
+      --safe-bot:  env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(180deg, #0f0f28 0%, var(--bg) 100%);
+      padding: calc(var(--safe-top) + 14px) 20px 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .header-row { text-align: center; }
+    .back {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      margin-bottom: 8px; float: left;
+    }
+    .back:active { opacity: 0.6; }
+    .header-badge {
+      display: inline-block; font-size: 10px; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--red);
+      background: #e9456015; border: 1px solid #e9456030;
+      border-radius: 20px; padding: 3px 10px; margin-bottom: 6px; clear: both;
+    }
+    .header h1 {
+      font-family: 'DM Serif Display', serif; font-size: 19px;
+      font-weight: normal; color: var(--text); letter-spacing: 0.3px;
+    }
+    .header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; gap: 4px; margin-top: 14px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 0 0 auto; padding: 10px 13px 12px; font-size: 12px;
+      font-weight: 500; color: var(--muted); cursor: pointer;
+      border-bottom: 2px solid transparent; white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      font-family: 'DM Sans', sans-serif; background: none;
+      border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: var(--text); border-bottom-color: var(--red); }
+
+    /* ── Scroll container ── */
+    .scroll {
+      padding: 18px 14px calc(var(--safe-bot) + 40px);
+      max-width: 540px; margin: 0 auto;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--muted); margin: 22px 2px 10px;
+    }
+    .section-title:first-child { margin-top: 4px; }
+
+    .lead { font-size: 13px; color: #c0c0e0; line-height: 1.7; margin-bottom: 4px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px; margin-bottom: 10px;
+    }
+    .card-accent { border-left: 4px solid var(--border); }
+    .a-red    { border-left-color: var(--red); }
+    .a-orange { border-left-color: var(--orange); }
+    .a-blue   { border-left-color: var(--blue); }
+    .a-green  { border-left-color: var(--green); }
+    .a-purple { border-left-color: var(--purple); }
+    .a-teal   { border-left-color: var(--teal); }
+
+    .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .card-icon { font-size: 20px; }
+    .card-title { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--text); flex: 1; }
+    .card-sub { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+
+    /* ── Indication list ── */
+    .ind-item {
+      display: flex; gap: 10px; padding: 10px 0;
+      border-bottom: 1px solid var(--border); font-size: 13px;
+      line-height: 1.55; align-items: flex-start;
+    }
+    .ind-item:last-child { border-bottom: none; }
+    .ind-bullet { min-width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-top: 7px; }
+    .b-red { background: var(--red); } .b-orange { background: var(--orange); }
+    .b-blue { background: var(--blue); } .b-green { background: var(--green); }
+    .b-purple { background: var(--purple); }
+    .ind-text { flex: 1; color: #d8d8ec; }
+    .ind-text strong { color: var(--text); font-weight: 600; }
+
+    /* ── Class / Evidence pill ── */
+    .ce {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.5px; padding: 2px 7px; border-radius: 6px;
+      margin-left: 4px; white-space: nowrap; vertical-align: middle;
+    }
+    .ce-1  { background: #4caf9e20; color: var(--green); border: 1px solid #4caf9e35; }
+    .ce-2a { background: #4fc3f720; color: var(--blue);  border: 1px solid #4fc3f735; }
+    .ce-2b { background: #f0a04020; color: var(--orange);border: 1px solid #f0a04035; }
+    .ce-3  { background: #e9456020; color: var(--red);   border: 1px solid #e9456035; }
+
+    /* ── Threshold highlight box ── */
+    .hl-box { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+    .hl-box-title {
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .hl-row {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; padding: 6px 0; font-size: 13px; line-height: 1.4;
+    }
+    .hl-row + .hl-row { border-top: 1px solid var(--border); }
+    .hl-label { color: #d8d8ec; flex: 1; }
+    .hl-val { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--red); white-space: nowrap; }
+    .hl-val.v-orange { color: var(--orange); } .hl-val.v-blue { color: var(--blue); }
+    .hl-val.v-green { color: var(--green); } .hl-val.v-purple { color: var(--purple); }
+
+    /* ── Flow ── */
+    .flow-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      border-radius: 12px; background: var(--surface2); margin-bottom: 8px;
+    }
+    .flow-tag {
+      font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 8px;
+      min-width: 78px; text-align: center; white-space: nowrap;
+    }
+    .ft-red { background: #e9456020; color: var(--red); }
+    .ft-orange { background: #f0a04020; color: var(--orange); }
+    .ft-green { background: #4caf9e20; color: var(--green); }
+    .ft-blue { background: #4fc3f720; color: var(--blue); }
+    .flow-arrow { color: var(--muted); font-size: 16px; }
+    .flow-text { flex: 1; font-size: 12.5px; line-height: 1.5; color: #d8d8ec; }
+    .flow-text strong { color: var(--text); }
+
+    /* ── Med table ── */
+    .med-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 4px 0; margin-bottom: 10px; overflow: hidden;
+    }
+    .med-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); }
+    .med-head-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text); }
+    .med-head-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .med-row {
+      display: flex; gap: 12px; padding: 12px 16px;
+      border-bottom: 1px solid var(--border); align-items: flex-start;
+    }
+    .med-row:last-child { border-bottom: none; }
+    .med-info { flex: 1; }
+    .med-name { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.4; }
+    .med-dose { font-size: 12px; color: var(--blue); margin-top: 3px; line-height: 1.5; }
+    .med-note { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .med-ce { flex: 0 0 auto; padding-top: 2px; }
+
+    /* ── Score chips ── */
+    .score-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 13px 15px; margin-bottom: 8px;
+    }
+    .score-name { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--text); }
+    .score-full { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+    .score-use { font-size: 12px; color: #d8d8ec; margin-top: 7px; line-height: 1.55; }
+    .score-use strong { color: var(--text); }
+
+    /* ── Callout ── */
+    .callout { border-radius: 14px; padding: 13px 15px; margin: 10px 0; font-size: 12px; line-height: 1.65; }
+    .callout strong { font-weight: 600; }
+    .co-purple { background: #9c6fde12; border: 1px solid #9c6fde30; color: #c0a0f0; }
+    .co-blue   { background: #4fc3f712; border: 1px solid #4fc3f730; color: #a0d8f0; }
+    .co-orange { background: #f0a04012; border: 1px solid #f0a04030; color: #f0c890; }
+    .co-green  { background: #4caf9e12; border: 1px solid #4caf9e30; color: #90d8c8; }
+    .co-red    { background: #e9456012; border: 1px solid #e9456030; color: #f0a0b0; }
+
+    /* ── Accordion ── */
+    .acc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 10px; overflow: hidden;
+    }
+    .acc summary {
+      list-style: none; cursor: pointer; padding: 15px 16px;
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text);
+    }
+    .acc summary::-webkit-details-marker { display: none; }
+    .acc .acc-icon { font-size: 19px; }
+    .acc .acc-chev { margin-left: auto; color: var(--muted); font-size: 13px; transition: transform 0.2s; }
+    .acc[open] .acc-chev { transform: rotate(180deg); }
+    .acc-body { padding: 0 16px 16px; }
+    .acc-body p { font-size: 12.5px; line-height: 1.7; color: #d8d8ec; margin-bottom: 10px; }
+    .acc-body p strong { color: var(--text); }
+
+    .disclaimer {
+      font-size: 10px; color: var(--border); text-align: center;
+      line-height: 1.6; padding: 24px 8px 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-row">
+    <a href="index.html" class="back">← MedTools</a>
+    <div class="header-badge">ESC / EACTS 2025</div>
+    <h1>Aortenklappenstenose</h1>
+    <p>Diagnostik · Echokriterien · Therapie · Follow-up</p>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-page="diag">Diagnostik</button>
+    <button class="tab" data-page="echo">Echo-Kriterien</button>
+    <button class="tab" data-page="scores">Scores</button>
+    <button class="tab" data-page="ther">Therapie</button>
+    <button class="tab" data-page="fu">Follow-up</button>
+  </div>
+</div>
+
+<div class="scroll">
+
+  <!-- ══════════════════════ DIAGNOSTIK ══════════════════════ -->
+  <div class="page active" id="page-diag">
+
+    <p class="lead">Die <strong>AS (Aortenklappenstenose)</strong> entwickelt sich langsam von leicht zu schwer durch zunehmende Klappenfibrose und -verkalkung; die Progression beschleunigt sich mit steigendem Schweregrad. Häufigste primäre Klappenerkrankung in Europa.</p>
+
+    <div class="section-title">Basisdiagnostik</div>
+
+    <div class="card card-accent a-blue">
+      <div class="card-head">
+        <span class="card-icon">🔊</span>
+        <span class="card-title">Echokardiografie</span>
+      </div>
+      <div class="card-sub">Schlüsseluntersuchung: bestätigt Diagnose, beurteilt Anatomie, Schweregrad, hämodynamische Folgen für LV-Funktion (linksventrikuläre Funktion) und Geometrie sowie Begleitpathologien.</div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>TTE</strong> (transthorakale Echokardiografie) — Erstlinie zur Graduierung</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>TEE</strong> (transösophageale Echokardiografie) — Morphologie, Planimetrie der AVA (Aortenklappenöffnungsfläche), peri-prozedural in schwierigen Szenarien</div>
+      </div>
+    </div>
+
+    <div class="section-title">Ergänzende & prognostische Verfahren</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>DSE</strong> (Dobutamin-Stress-Echokardiografie) — bei low-flow/low-gradient AS mit reduzierter LVEF: unterscheidet echte von pseudosevere AS (Flussreserve = Schlagvolumen-Anstieg ≥ 20 %)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>AVCS</strong> (Aortenklappen-Kalzium-Score mittels CCT, kardialer Computertomografie) — korreliert mit Schweregrad & Outcome, v.a. bei low-flow/low-gradient AS (Schwellen siehe Echo-Kriterien)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>Belastungstest</strong> — empfohlen zur Risikostratifizierung bei asymptomatischer schwerer AS; demaskiert Symptome / Blutdruckabfall &gt; 20 mmHg <span class="ce ce-1">I</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>BNP / NT-proBNP</strong> (natriuretische Peptide) — arbitrieren Symptomursache, identifizieren Hochrisiko-Asymptomatische</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-purple"></div>
+        <div class="ind-text"><strong>CMR</strong> (kardiale Magnetresonanztomografie) — Quantifizierung von Myokardnarbe & diffuser Fibrose (prognostisch)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-purple"></div>
+        <div class="ind-text"><strong>GLS</strong> (Global Longitudinal Strain) — Schwelle −15 % identifiziert asymptomatische Hochrisikopatienten</div>
+      </div>
+    </div>
+
+    <div class="callout co-orange">
+      <strong>⚠️ TTR-Amyloidose (Transthyretin-Amyloidose):</strong> koexistiert bei älteren AS-Patienten häufig. Bei Verdacht monoklonales Protein ausschließen (Immunfixation, freie Leichtketten) und Diagnose per Diphosphonat-Szintigrafie sichern. Patienten mit begleitender schwerer AS profitieren meist dennoch von der Klappenintervention.
+    </div>
+
+    <div class="callout co-blue">
+      <strong>💡 Procedural Planning:</strong> Die CCT (kardiale Computertomografie) ist Schlüssel zur TAVI-Eignung — Annulusgröße, Aortenwurzel, Kalzifikation, Abstand der Koronarostien, Gefäßzugang. <strong>LV-Katheter</strong> zur AS-Beurteilung nur, wenn Symptome/Befund inkonklusiv und nicht-invasive Diagnostik unzureichend.
+    </div>
+  </div>
+
+  <!-- ══════════════════════ ECHO-KRITERIEN ══════════════════════ -->
+  <div class="page" id="page-echo">
+
+    <p class="lead">Die europäische Graduierung stützt sich primär auf den <strong>mittleren Druckgradienten (robustester Parameter)</strong>, die <strong>Vmax (maximale transvalvuläre Geschwindigkeit)</strong> und die <strong>AVA (Aortenklappenöffnungsfläche)</strong>.</p>
+
+    <div class="section-title">Schwere AS — konkordante Kriterien</div>
+
+    <div class="hl-box">
+      <div class="hl-box-title">High-Gradient AS · schwer unabhängig von LVEF & Fluss</div>
+      <div class="hl-row">
+        <span class="hl-label">Mittlerer Druckgradient</span>
+        <span class="hl-val">≥ 40 mmHg</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">Vmax (Spitzengeschwindigkeit)</span>
+        <span class="hl-val">≥ 4,0 m/s</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">AVA (Öffnungsfläche)</span>
+        <span class="hl-val">≤ 1,0 cm²</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">AVAi (indexiert auf Körperoberfläche)</span>
+        <span class="hl-val">≤ 0,6 cm²/m²</span>
+      </div>
+    </div>
+
+    <div class="section-title">Flusszustand & diskordante Befunde</div>
+    <div class="card-sub" style="margin:0 2px 10px;">Einteilung nach <strong>SVi (Schlagvolumenindex)</strong> bei Diskordanz der Parameter. Schwelle: 35 mL/m² trennt low-flow von normal-flow.</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-red"></div>
+        <div class="ind-text"><strong>Low-flow, low-gradient + reduzierte LVEF</strong><br>Gradient &lt; 40 mmHg · AVA ≤ 1 cm² · SVi ≤ 35 mL/m² · LVEF &lt; 50 % → DSE zur Klärung echt vs. pseudosevere</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text"><strong>Low-flow, low-gradient + erhaltene LVEF</strong><br>Gradient &lt; 40 mmHg · AVA ≤ 1 cm² · SVi ≤ 35 mL/m² · LVEF ≥ 50 %</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>Normal-flow, low-gradient + erhaltene LVEF</strong><br>SVi &gt; 35 mL/m² → meist nur moderate AS</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>Diskordante High-Gradient AS</strong><br>Gradient ≥ 40 mmHg, AVA &gt; 1 cm² → schwer, sofern nicht reversibler High-Flow</div>
+      </div>
+    </div>
+
+    <div class="section-title">CT-Kalzium-Score (AVCS)</div>
+    <div class="card-sub" style="margin:0 2px 10px;">Adjunktiv bei low-flow/low-gradient AS. Angabe in <strong>AU (Agatston-Einheiten)</strong>.</div>
+
+    <div class="hl-box">
+      <div class="hl-box-title">Schwere AS wahrscheinlich (Sensitivität/Spezifität ~85 %)</div>
+      <div class="hl-row">
+        <span class="hl-label">Männer</span>
+        <span class="hl-val">&gt; 2000 AU</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">Frauen</span>
+        <span class="hl-val">&gt; 1200 AU</span>
+      </div>
+    </div>
+    <div class="hl-box">
+      <div class="hl-box-title">Schwere AS unwahrscheinlich</div>
+      <div class="hl-row">
+        <span class="hl-label">Männer</span>
+        <span class="hl-val v-green">&lt; 1600 AU</span>
+      </div>
+      <div class="hl-row">
+        <span class="hl-label">Frauen</span>
+        <span class="hl-val v-green">&lt; 800 AU</span>
+      </div>
+    </div>
+
+    <div class="callout co-orange">
+      <strong>⚠️ Vorsicht:</strong> Schwere AS auch ohne ausgeprägte Verkalkung möglich bei <strong>BAV (bikuspide Aortenklappe)</strong>, begleitender Amyloidose und überwiegend fibrotischer Stenose (postrheumatisch, radiogen, entzündlich).
+    </div>
+
+    <div class="callout co-blue">
+      <strong>💡 Weitere Hinweise:</strong> Velocity Ratio (dimensionsloser Index) &lt; 0,25 spricht stark für schwere AS. Bei low-flow/low-gradient AS mit reduzierter LVEF liefern AVCS und DSE komplementäre Information — bei uneindeutigem Befund integrierte Gesamtbeurteilung.
+    </div>
+  </div>
+
+  <!-- ══════════════════════ SCORES ══════════════════════ -->
+  <div class="page" id="page-scores">
+
+    <p class="lead">Relevante Scores zur Risikostratifizierung und für die Heart-Team-Entscheidung zwischen <strong>TAVI (Transkatheter-Aortenklappen­implantation)</strong> und <strong>SAVR (chirurgischer Aortenklappenersatz)</strong>.</p>
+
+    <div class="section-title">Operatives Risiko</div>
+
+    <div class="score-card">
+      <div class="score-name">STS-PROM</div>
+      <div class="score-full">Society of Thoracic Surgeons – Predicted Risk of Mortality</div>
+      <div class="score-use">Geschätzte 30-Tage-Mortalität nach Herzchirurgie. <strong>&lt; 4 % = niedriges Risiko</strong> (begünstigt SAVR bei &lt; 75 J), <strong>&gt; 8 % = hohes Risiko</strong> (begünstigt TAVI).</div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-name">EuroSCORE II</div>
+      <div class="score-full">European System for Cardiac Operative Risk Evaluation II</div>
+      <div class="score-use">Alternatives operatives Risikomodell, gleiche Schwellen (&lt; 4 % niedrig, &gt; 8 % hoch). Cave: bekannte Limitationen der prädiktiven Genauigkeit — nicht als alleiniges Kriterium verwenden.</div>
+    </div>
+
+    <div class="section-title">Bildgebung / Schweregrad</div>
+
+    <div class="score-card">
+      <div class="score-name">AVCS (Agatston)</div>
+      <div class="score-full">Aortic Valve Calcium Score</div>
+      <div class="score-use">CT-basierter Kalzium-Score, geschlechtsspezifisch. Schwellen für „schwere AS wahrscheinlich": <strong>♂ &gt; 2000 AU · ♀ &gt; 1200 AU</strong> (Details im Echo-Tab).</div>
+    </div>
+
+    <div class="section-title">Funktionell / prognostisch</div>
+
+    <div class="score-card">
+      <div class="score-name">NYHA-Klasse</div>
+      <div class="score-full">New York Heart Association functional class</div>
+      <div class="score-use">Symptomschwere (I–IV). Grundlage der Symptombeurteilung — symptomatische schwere AS hat unbehandelt ungünstige Prognose.</div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-name">GLS</div>
+      <div class="score-full">Global Longitudinal Strain</div>
+      <div class="score-use">Echokardiografischer Deformationsparameter. Schwelle <strong>−15 %</strong> identifiziert asymptomatische schwere AS mit erhöhtem Risiko für klinische Verschlechterung.</div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-name">Frailty-Assessment</div>
+      <div class="score-full">z.B. Clinical Frailty Scale</div>
+      <div class="score-use">Gebrechlichkeits­beurteilung als Teil der Heart-Team-Bewertung — beeinflusst Verfahrenswahl und Abschätzung der Lebenserwartung.</div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-name">KCCQ</div>
+      <div class="score-full">Kansas City Cardiomyopathy Questionnaire</div>
+      <div class="score-use">Lebensqualitäts-Score, in den TAVI-Studien als Endpunkt verwendet; nützlich zur Verlaufsbeurteilung nach Intervention.</div>
+    </div>
+
+    <div class="callout co-purple">
+      <strong>🧭 Merke:</strong> Kein Score allein entscheidet. Die ESC/EACTS 2025 betont die individuelle <strong>Heart-Team-Beurteilung</strong> klinischer, anatomischer und prozeduraler Faktoren inkl. Lebenszeit-Management und Lebenserwartung <span class="ce ce-1">I&nbsp;C</span>.
+    </div>
+  </div>
+
+  <!-- ══════════════════════ THERAPIE ══════════════════════ -->
+  <div class="page" id="page-ther">
+
+    <div class="section-title">Medikamentöse Therapie</div>
+
+    <div class="callout co-red">
+      <strong>⛔ Wichtig:</strong> <strong>Keine</strong> medikamentöse Therapie beeinflusst den natürlichen Verlauf der AS. Weder Statine noch kalzifikations­hemmende Substanzen verändern die Progression.
+    </div>
+
+    <div class="med-card">
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">RAS-Blocker (bei Begleithypertonie)</div>
+          <div class="med-dose">ACE-Hemmer oder ARB · vorsichtig titrieren</div>
+          <div class="med-note">RAS = Renin-Angiotensin-System; ARB = Angiotensin-Rezeptor-Blocker. Begleithypertonie behandeln zur Vermeidung zusätzlicher Nachlast — Cave symptomatische Hypotonie.</div>
+        </div>
+      </div>
+      <div class="med-row">
+        <div class="med-info">
+          <div class="med-name">GDMT bei AS + Herzinsuffizienz</div>
+          <div class="med-dose">nach HI-Leitlinien</div>
+          <div class="med-note">GDMT = leitliniengerechte medikamentöse Therapie. Bei symptomatischer schwerer AS darf Medikation die Intervention <strong>nicht verzögern</strong>. Bei persistierender HI/reduzierter LVEF vor Intervention beginnen, danach auftitrieren.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Intervention — symptomatische schwere AS</div>
+    <div class="card-sub" style="margin:0 2px 10px;">Frühe Intervention bei allen geeigneten Patienten mit Lebenserwartung &gt; 1 Jahr.</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">High-Gradient schwere AS, symptomatisch — Intervention empfohlen <span class="ce ce-1">I</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">Low-flow/low-gradient, reduzierte LVEF (&lt; 50 %) <strong>mit</strong> Flussreserve (kontraktile Reserve) <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">Low-flow/low-gradient, reduzierte LVEF — nach Bestätigung der schweren AS (per CCT-Kalzium oder Stress-Echo) <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Low-flow/low-gradient, normale LVEF — nach sorgfältiger Bestätigung der schweren AS <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+    </div>
+
+    <div class="callout co-orange">
+      <strong>Normal-flow, low-gradient + erhaltene LVEF:</strong> Prognose ähnlich moderater AS. Sofern die Multimodalitäts­diagnostik nicht klar schwere AS zeigt → reguläre klinische & echokardiografische Überwachung.
+    </div>
+
+    <div class="section-title">Intervention — asymptomatische schwere AS</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">LVEF &lt; 50 % ohne andere Ursache — Intervention empfohlen <span class="ce ce-1">I</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">LVEF &lt; 55 % ohne andere Ursache <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">High-gradient schwere AS, LVEF ≥ 50 %, normaler Belastungstest, niedriges Risiko — als Alternative zur aktiven Überwachung <span class="ce ce-2a">IIa&nbsp;A</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">LVEF &gt; 55 %, normaler Belastungstest, niedriges Risiko UND ≥ 1 Hochrisikomarker* <span class="ce ce-2a">IIa&nbsp;B</span></div>
+      </div>
+    </div>
+
+    <div class="hl-box">
+      <div class="hl-box-title">* Hochrisikomarker (≥ 1 erforderlich)</div>
+      <div class="hl-row"><span class="hl-label">Very severe AS — mittlerer Gradient</span><span class="hl-val v-orange">≥ 60 mmHg</span></div>
+      <div class="hl-row"><span class="hl-label">Very severe AS — Vmax</span><span class="hl-val v-orange">&gt; 5,0 m/s</span></div>
+      <div class="hl-row"><span class="hl-label">Schwere Verkalkung + Vmax-Progression</span><span class="hl-val v-orange">≥ 0,3 m/s/Jahr</span></div>
+      <div class="hl-row"><span class="hl-label">BNP / NT-proBNP (über Normwert)</span><span class="hl-val v-orange">&gt; 3×</span></div>
+    </div>
+
+    <div class="callout co-blue">
+      <strong>📊 EARLY TAVR (NEJM 2024, n = 901):</strong> Bei asymptomatischer schwerer AS war frühe TAVI der klinischen Überwachung überlegen — Reduktion des kombinierten Endpunkts aus Tod, Schlaganfall oder ungeplanter kardiovaskulärer Hospitalisierung (HR 0,50). Stützt die erweiterte IIa-Indikation zur frühen Intervention bei niedrigem Risiko.
+    </div>
+
+    <div class="section-title">Moderate AS</div>
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">Chirurgische Intervention <strong>nur</strong> bei Patienten, die ohnehin CABG (koronare Bypass-Operation), Aorten- oder andere Klappenchirurgie erhalten</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">Gemischte moderate AS + moderate AR (Aortenklappen­insuffizienz): Intervention bei Symptomen + mittlerer Gradient ≥ 40 mmHg oder Vmax ≥ 4,0 m/s <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Verfahrenswahl — TAVI vs. SAVR</div>
+    <div class="card-sub" style="margin:0 2px 10px;">Grundsatz: Heart-Team-Entscheidung nach klinischen, anatomischen & prozeduralen Faktoren inkl. Lebenszeit-Management <span class="ce ce-1">I&nbsp;C</span>.</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>TAVI</strong> bei ≥ 75 Jahren, hohem Risiko (STS-PROM/EuroSCORE II &gt; 8 %) oder OP-Ungeeignetheit <span class="ce ce-1">I&nbsp;A</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>SAVR</strong> bei jüngeren Patienten, niedriges Risiko (&lt; 75 J, STS-PROM/EuroSCORE II &lt; 4 %) oder ungeeignet für transfemorale TAVI <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text">SAVR oder TAVI für übrige Patienten nach individuellen Charakteristika <span class="ce ce-1">I&nbsp;B</span></div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-orange"></div>
+        <div class="ind-text">Non-transfemorale TAVI bei OP-Ungeeignetheit + transfemoral ungeeignet <span class="ce ce-2b">IIb&nbsp;C</span></div>
+      </div>
+    </div>
+
+    <div class="callout co-green">
+      <strong>🦾 Klappenwahl:</strong> MHV (mechanische Herzklappe) bevorzugt &lt; 60 J, BHV (biologische Herzklappe) bevorzugt &gt; 65 J in Aortenposition. Ross-Prozedur als Option bei jungen Patienten an Expertenzentren. Ballonvalvuloplastie nur als Bridge zu TAVI/SAVR oder vor dringlicher Hochrisiko-Operation.
+    </div>
+
+    <!-- BAV Akkordeon -->
+    <div class="section-title">Spezialfall: Bikuspide Klappe</div>
+    <details class="acc">
+      <summary>
+        <span class="acc-icon">🔱</span>
+        BAV-Stenose (bikuspide Aortenklappe)
+        <span class="acc-chev">▼</span>
+      </summary>
+      <div class="acc-body">
+        <p><strong>BAV</strong> = bikuspide Aortenklappe. Schwere AS tritt früher auf als bei trikuspider Klappe und ist häufig mit <strong>Aortopathie</strong> (Dilatation von Wurzel/Aorta ascendens) assoziiert. Dominante Morphologie bei jüngeren AS-Patienten.</p>
+        <p>BAV erhöht die Komplexität der TAVI: asymmetrische Verkalkung, elliptische Annulusform, fehlende Standardisierung der Klappengröße. BAV-Patienten waren aus fast allen großen TAVI-vs-SAVR-RCTs ausgeschlossen.</p>
+        <div class="ind-item">
+          <div class="ind-bullet b-orange"></div>
+          <div class="ind-text">TAVI <strong>kann erwogen werden</strong> zur Behandlung der schweren BAV-Stenose bei erhöhtem chirurgischem Risiko, falls die Anatomie geeignet ist <span class="ce ce-2b">IIb&nbsp;B</span></div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Konkomitante KHK Akkordeon -->
+    <div class="section-title">Begleitende Koronare Herzkrankheit</div>
+    <details class="acc">
+      <summary>
+        <span class="acc-icon">🩸</span>
+        KHK-Abklärung bei TAVI-Kandidaten
+        <span class="acc-chev">▼</span>
+      </summary>
+      <div class="acc-body">
+        <p><strong>KHK</strong> = koronare Herzkrankheit; <strong>PCI</strong> = perkutane Koronarintervention; <strong>CABG</strong> = koronare Bypass-Operation; <strong>ICA</strong> = invasive Koronarangiografie.</p>
+        <div class="ind-item">
+          <div class="ind-bullet b-blue"></div>
+          <div class="ind-text">Verzicht auf invasive Koronarangiografie (ICA) <strong>sollte erwogen werden</strong> bei TAVI-Kandidaten, wenn die Planungs-CT-Angiografie ausreichende Qualität zum Ausschluss signifikanter KHK hat <span class="ce ce-2a">IIa&nbsp;B</span></div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-blue"></div>
+          <div class="ind-text"><strong>PCI sollte erwogen werden</strong> bei primärer TAVI-Indikation und Koronarstenose ≥ 90 % in Segmenten mit Referenzdurchmesser ≥ 2,5 mm <span class="ce ce-2a">IIa&nbsp;B</span></div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-orange"></div>
+          <div class="ind-text">Nicht-komplexe KHK: per CABG <em>oder</em> PCI adressierbar; <strong>komplexe KHK begünstigt CABG</strong> (kombiniert mit SAVR)</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Antithrombotika Akkordeon -->
+    <div class="section-title">Antithrombotische Therapie nach Intervention</div>
+    <details class="acc">
+      <summary>
+        <span class="acc-icon">💊</span>
+        Nach TAVI / SAVR
+        <span class="acc-chev">▼</span>
+      </summary>
+      <div class="acc-body">
+        <p><strong>SAPT</strong> = einfache Thrombozytenaggregations­hemmung; <strong>DAPT</strong> = duale Thrombozytenaggregations­hemmung; <strong>OAK</strong> = orale Antikoagulation; <strong>VKA</strong> = Vitamin-K-Antagonist; <strong>DOAK</strong> = direktes orales Antikoagulans; <strong>ASS</strong> = Acetylsalicylsäure.</p>
+
+        <div class="med-head" style="padding:0 0 4px;border:none;">
+          <div class="med-head-title" style="font-size:14px;">TAVI ohne OAK-Indikation</div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-green"></div>
+          <div class="ind-text">Niedrig dosierte ASS <strong>75–100 mg/Tag für 12 Monate</strong> nach TAVI empfohlen <span class="ce ce-1">I&nbsp;A</span></div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-blue"></div>
+          <div class="ind-text">Langfristige Fortführung (nach den ersten 12 Monaten) niedrig dosierter ASS sollte erwogen werden <span class="ce ce-2a">IIa&nbsp;C</span></div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-red"></div>
+          <div class="ind-text"><strong>DAPT nicht empfohlen</strong> zur Thromboseprävention nach TAVI, außer bei klarer Indikation <span class="ce ce-3">III&nbsp;B</span></div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-red"></div>
+          <div class="ind-text">Routinemäßige OAK nach TAVI <strong>nicht empfohlen</strong> ohne Ausgangsindikation <span class="ce ce-3">III&nbsp;A</span></div>
+        </div>
+
+        <div class="med-head" style="padding:10px 0 4px;border:none;">
+          <div class="med-head-title" style="font-size:14px;">TAVI mit OAK-Indikation</div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-green"></div>
+          <div class="ind-text">OAK empfohlen für TAVI-Patienten mit anderer OAK-Indikation (z.B. Vorhofflimmern) <span class="ce ce-1">I&nbsp;B</span></div>
+        </div>
+
+        <div class="med-head" style="padding:10px 0 4px;border:none;">
+          <div class="med-head-title" style="font-size:14px;">Chirurgische Bioprothese (SAVR)</div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-blue"></div>
+          <div class="ind-text">Lebenslange niedrig dosierte ASS (75–100 mg/Tag) kann ab 3 Monate nach Implantation erwogen werden (ohne klare OAK-Indikation) <span class="ce ce-2b">IIb&nbsp;C</span></div>
+        </div>
+        <div class="ind-item">
+          <div class="ind-bullet b-green"></div>
+          <div class="ind-text">OAK-Fortsetzung empfohlen bei klarer OAK-Indikation <span class="ce ce-1">I&nbsp;B</span></div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ══════════════════════ FOLLOW-UP ══════════════════════ -->
+  <div class="page" id="page-fu">
+
+    <p class="lead">Die Progressionsrate variiert stark — Patientenedukation und prompte Symptommeldung sind zentral. Verlaufskontrollen idealerweise an einem <strong>Heart Valve Centre</strong>.</p>
+
+    <div class="section-title">Asymptomatische schwere AS</div>
+
+    <div class="flow-item">
+      <span class="flow-tag ft-red">≥ alle 6 Mon.</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text"><strong>Mindestens halbjährlich.</strong> Detektion früher Symptome (ggf. Belastungstest), Verlauf echokardiografischer Parameter (v.a. LVEF). Serielle natriuretische Peptide unterstützen das Timing.</span>
+    </div>
+
+    <div class="section-title">Verlaufsintervalle nach Schweregrad</div>
+
+    <div class="flow-item">
+      <span class="flow-tag ft-green">2–3 Jahre</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text"><strong>Milde AS</strong>, junge Patienten ohne wesentliche Klappenverkalkung.</span>
+    </div>
+    <div class="flow-item">
+      <span class="flow-tag ft-orange">jährlich</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text"><strong>Moderate (degenerative) AS</strong> mit relevanter Verkalkung — Prognose schlechter als früher angenommen; mindestens jährlich reevaluieren.</span>
+    </div>
+    <div class="flow-item">
+      <span class="flow-tag ft-red">verkürzt</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-text">Mit zunehmender Stenoseschwere beschleunigt sich die Progression — Intervalle schrittweise verkürzen.</span>
+    </div>
+
+    <div class="section-title">Nach Klappenintervention</div>
+
+    <div class="card">
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text"><strong>Früh-Echo</strong> innerhalb der ersten Wochen nach Klappenersatz — Baseline-Dokumentation der Prothesenfunktion (empfohlen)</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-blue"></div>
+        <div class="ind-text">Bei <strong>Bioprothese</strong>: kardiologische + echokardiografische Kontrolle <strong>jährlich</strong>, sowie bei jedem Hinweis auf Klappendysfunktion</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-bullet b-green"></div>
+        <div class="ind-text"><strong>Kardiale Rehabilitation</strong> häufig sinnvoll — v.a. nach SAVR und bei älteren Patienten; verbessert Alltagsaktivität & 6-Minuten-Gehstrecke</div>
+      </div>
+    </div>
+
+    <div class="callout co-purple">
+      <strong>👥 Patientenedukation:</strong> Patient und Angehörige über die Bedeutung regelmäßiger Kontrollen und prompter Symptommeldung aufklären — bei neu auftretenden Symptomen umgehende Vorstellung statt Warten auf den nächsten Routinetermin.
+    </div>
+  </div>
+
+  <!-- ═══ EVIDENZ-LEGENDE (global) ═══ -->
+  <div class="section-title">Empfehlungsklassen</div>
+  <div class="card">
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-1">I</span> &nbsp;Empfohlen / indiziert</span></div>
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-2a">IIa</span> &nbsp;Sollte erwogen werden</span></div>
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-2b">IIb</span> &nbsp;Kann erwogen werden</span></div>
+    <div class="hl-row"><span class="hl-label"><span class="ce ce-3">III</span> &nbsp;Nicht empfohlen</span></div>
+    <div class="card-sub" style="margin-top:10px;margin-bottom:0;">Evidenzgrad: <strong>A</strong> = mehrere RCTs (randomisierte kontrollierte Studien)/Metaanalysen · <strong>B</strong> = 1 RCT / große Beobachtungsstudien · <strong>C</strong> = Expertenkonsens.</div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ Klinische Entscheidungsunterstützung · ersetzt nicht die individuelle ärztliche Beurteilung.<br>
+    Quellen: 2025 ESC/EACTS Guidelines for the management of valvular heart disease (Eur Heart J 2025;46:4635) · EARLY TAVR (NEJM 2024;391:1924)
+  </div>
+
+</div><!-- /scroll -->
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const pages = document.querySelectorAll('.page');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.page;
+      tabs.forEach(t => t.classList.remove('active'));
+      pages.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('page-' + target).classList.add('active');
+      tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
