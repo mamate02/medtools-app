@@ -1,9 +1,10 @@
-const CACHE = 'medtools-v2';
+const CACHE = 'medtools-v3';
 const FILES = [
   './index.html',
   './ldl-rechner.html',
   './karteikarten.html',
   './khk-diagnostik.html',
+  './aortenklappenstenose.html',
   './manifest.json'
 ];
 
